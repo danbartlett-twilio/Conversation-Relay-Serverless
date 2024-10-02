@@ -1,0 +1,4 @@
+====================================================
+DEPLOY TEMPLATE
+====================================================
+sam deploy --stack-name USE-CASE-DEFAULT --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 

@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: HTTP API to set up the call with ConversationRelay.
+
+Globals:
+  Function:
+    Timeout: 5
+    Runtime: nodejs20.x
+   
+Resources:
+  TwimlAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+
+  ######################################################
+  # CallSetupFunction => 
+  ######################################################
+  CallSetupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: "Handles inbound call, sets up ConversationRelay Websocket."
+      CodeUri: lambdas/call-setup-post/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      Tags:
+        API: "Lookup" 
+        Method: "Get"
+      Environment:
+        Variables:
+          WS_URL: !ImportValue 'CRWebsocketURL'
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName
+      Policies:        
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue  CRPrimaryDynamoTableName                                
+      Events:
+        CallSetupPostEvent:
+          Type: HttpApi
+          Properties:
+            Path: /call-setup
+            Method: post
+            ApiId: !Ref TwimlAPI
+
+Outputs:
+
+  TwimlAPI:
+    Description: "API for TwimlAPI"
+    Value: !Sub "https://${TwimlAPI}.execute-api.${AWS::Region}.amazonaws.com/"

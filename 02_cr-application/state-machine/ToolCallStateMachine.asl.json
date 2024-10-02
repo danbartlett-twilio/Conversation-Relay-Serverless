@@ -1,0 +1,51 @@
+{
+    "Comment": "State Machine that invokes lambdas for tools calls in parallel and then publishes SNS message upon completion.",
+    "StartAt": "Map",
+    "States": {
+      "Map": {
+        "Type": "Map",
+        "InputPath": "$.Payload.tool_calls",
+        "ItemProcessor": {
+          "ProcessorConfig": {
+            "Mode": "INLINE"
+          },
+          "StartAt": "Lambda Invoke",
+          "States": {
+            "Lambda Invoke": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "FunctionName.$": "$.lambdaArn",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        "Next": "SNS Publish"
+      },
+      "SNS Publish": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::sns:publish",
+        "Parameters": {
+          "Message.$": "$",
+          "TopicArn": "${ToolCallReturnTopicARN}"
+        },
+        "End": true
+      }
+    }
+  }

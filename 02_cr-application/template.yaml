@@ -1,0 +1,386 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ConversationRelay Websocket API and functions connecting to LLM Gen AI 
+  plus State Machine that can invoke lambdas in parallel when LLM calls tools.
+
+Globals:
+  Function:
+    Timeout: 15
+
+Resources:
+
+  ##########################################################################
+  #  SNS Topic                 
+  #
+  #  Event Messaging System to route prompts to LLM Handler
+  ##########################################################################
+  ToolCallReturnTopic:
+    Type: AWS::SNS::Topic
+
+  ###############################################################
+  # ConversationRelayOpenAIClientLayer: OpenAI Nodejs client library
+  # https://github.com/openai/openai-node
+  ###############################################################
+  ConversationRelayOpenAIClientLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ConversationRelayOpenAIClientLayer
+      Description: Allows for calls to OpenAI using their SDK
+      ContentUri: layers/layer-cr-open-ai-client/
+      CompatibleRuntimes:
+        - nodejs20.x
+      LicenseInfo: 'MIT'
+      RetentionPolicy: Retain
+
+  ##########################################################################
+  #  Shared Lambda Layers
+  #
+  #  
+  ##########################################################################
+  ConversationRelayTwilioClientLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ConversationRelayTwilioClientLayer
+      Description: Allows for calls to Twilio using SDK
+      ContentUri: layers/layer-cr-twilio-client/
+      CompatibleRuntimes:
+        - nodejs20.x
+      LicenseInfo: 'MIT'
+      RetentionPolicy: Retain
+
+  ConversationRelayRandomDataGeneratorLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ConversationRelayRandomDataGeneratorLayer
+      Description: Helper function that returns random data for ConversationRelay Demos
+      ContentUri: layers/layer-random-data-generator/
+      CompatibleRuntimes:
+        - nodejs20.x
+      LicenseInfo: 'MIT'
+      RetentionPolicy: Retain
+
+  ConversationRelaySaveToolCallResultLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ConversationRelaySaveToolCallResultLayer
+      Description: Helper function saves the result of a tool call -- DRY.
+      ContentUri: layers/layer-save-tool-result/
+      CompatibleRuntimes:
+        - nodejs20.x
+      LicenseInfo: 'MIT'
+      RetentionPolicy: Retain
+
+  ##########################################################################
+  #  STEP FUNCTION
+  #
+  #  Each Use Case has its own Step Function and Lambda Functions
+  ##########################################################################
+  ConversationRelayToolCallStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: state-machine/ToolCallStateMachine.asl.json
+      DefinitionSubstitutions:
+        ToolCallReturnTopicARN: !Ref ToolCallReturnTopic
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "cloudwatch:*"
+                - "logs:*"
+              Resource: "*"
+        # Upon Completing Tool Call(s) SNS Message Published
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt ToolCallReturnTopic.TopicName
+        ###########################################################
+        # Policies for State Machine to invoke necessary lambdas 
+        # to handle tool calls.
+        # ALL Tool Call Lambdas need to be listed below!
+        ###########################################################
+        # DEFAULT USE CASE        
+        - LambdaInvokePolicy:
+            FunctionName: "DefaultSaveFirstAndLastName"
+        - LambdaInvokePolicy:
+            FunctionName: "DefaultSaveUseCase"
+        ###########################################################
+        # APARTMENT SEARCH USE CASE
+        - LambdaInvokePolicy:
+            FunctionName: "CheckAvailabilityFunction"
+        - LambdaInvokePolicy:
+            FunctionName: "CommonInquiriesFunction"
+        - LambdaInvokePolicy:
+            FunctionName: "ScheduleTourFunction"
+        - LambdaInvokePolicy:
+            FunctionName: "CheckExistingAppointmentsFunction"  
+        - LambdaInvokePolicy:
+            FunctionName: "ListAvailableApartmentsFunction"
+        - LambdaInvokePolicy:
+            FunctionName: "SendAppointmentConfirmationSmsFunction"                        
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt ConversationRelayToolCallStateMachineLogGroup.Arn
+        IncludeExecutionData: true
+        Level: 'ALL'  
+
+  ##########################################################################
+  #  STEP FUNCTION LOG GROUP
+  ##########################################################################
+  ConversationRelayToolCallStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join [ "/", [ "stepfunctions", StateMachine]]     
+
+  ConversationRelayToolCallStateMachineLogGroupExecutionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties: 
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - states:StartExecution
+            Resource:
+              - !Ref ConversationRelayToolCallStateMachine
+
+# Websocket API
+  CRWebSocketApi:
+    Type: 'AWS::ApiGatewayV2::Api'
+    Properties:
+      Name: CRWebSocketApi
+      Description: Websocket API between Twilio and AI application
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+
+# OnConnectLambda
+  OnConnectLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-onconnect-function'
+      Description: Lambda to handle connection to websocket api
+      CodeUri: lambdas/ws/onconnect/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64      
+      MemorySize: 128
+      Environment:
+        Variables:          
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName 
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !ImportValue  CRPrimaryDynamoTableName 
+
+  # Function permissions grant an AWS service or another account permission to use a function
+  OnConnectFunctionResourcePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref OnConnectLambdaFunction
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+  OnConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref CRWebSocketApi
+      Description: OnConnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: 
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectLambdaFunction.Arn}/invocations
+  OnConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref CRWebSocketApi
+      RouteKey: $connect
+      AuthorizationType: NONE
+      OperationName: OnConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnConnectIntegration
+
+# Default Lambda
+  DefaultWSLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-default-function' 
+      Description: Lambda to handle posts coming into websocket api
+      CodeUri: lambdas/ws/default/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64     
+      MemorySize: 128      
+      Environment:
+        Variables:          
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName           
+          TOOL_CALL_STATE_MACHINE: !Ref ConversationRelayToolCallStateMachine
+          # USE AWS SECRETS MANAGER
+          OPENAI_API_KEY: 'YOUR-OPENAI-API-KEY'
+          AWS_ACCOUNT_ID: !Ref AWS::AccountId
+      Layers:
+        - !Ref ConversationRelayOpenAIClientLayer
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref ToolCallReturnTopic                          
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !ImportValue  CRPrimaryDynamoTableName                  
+      # Lambda needs to be able to invoke the State Machine
+      # to call tools
+      - StepFunctionsExecutionPolicy:
+          StateMachineName: !GetAtt ConversationRelayToolCallStateMachine.Name
+      - Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+  # Function permissions grant an AWS service or another account permission to use a function
+  DefaultWSFunctionResourcePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref DefaultWSLambdaFunction
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+  DefaultWSIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref CRWebSocketApi
+      Description: Default WS Route Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: 
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultWSLambdaFunction.Arn}/invocations
+  DefaultWSRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref CRWebSocketApi
+      RouteKey: $default
+      AuthorizationType: NONE
+      OperationName: DefaultRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref DefaultWSIntegration
+
+  OnDisconnectLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-ondisconnect-function'
+      Description: Lambda to handle closed websocket connection
+      CodeUri: lambdas/ws/disconnect/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64     
+      MemorySize: 128
+
+  OnDisconnectFunctionResourcePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref OnDisconnectLambdaFunction
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+  OnDisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref CRWebSocketApi
+      Description: OnDisconnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: 
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectLambdaFunction.Arn}/invocations
+  OnDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref CRWebSocketApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      OperationName: OnDisconnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnDisconnectIntegration
+        
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - OnConnectRoute
+      - DefaultWSRoute
+      - OnDisconnectRoute
+    Properties:
+      ApiId: !Ref CRWebSocketApi
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: prod
+      Description: Prod Stage
+      DeploymentId: !Ref Deployment
+      ApiId: !Ref CRWebSocketApi
+
+  WSManageConnectionsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:       
+      ManagedPolicyName:        
+        !Sub '${AWS::StackName}-WSManageConnectionsPolicy'          
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+          - 'execute-api:ManageConnections'
+          Resource:
+          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+
+##########################################################################
+#   Outputs
+##########################################################################
+Outputs:
+  OnConnectLambdaFunctionArn:
+    Description: "OnConnect function ARN"
+    Value: !GetAtt OnConnectLambdaFunction.Arn
+  OnDisconnectLambdaFunctionArn:
+    Description: "OnDisconnect function ARN"
+    Value: !GetAtt OnDisconnectLambdaFunction.Arn
+  DefaultWSLambdaFunctionArn:
+    Description: "Post function ARN"
+    Value: !GetAtt DefaultWSLambdaFunction.Arn
+  CRWebSocketApi:
+    Description: "ARN to the Web Socket API Gateway"
+    Value: !Ref CRWebSocketApi
+    Export:
+      Name: 'CRWebSocketApi' 
+  CRWebsocketURL:
+    Description: "The WSS Protocol URL to connect to"
+    Value: !Join [ '', [ 'wss://', !Ref CRWebSocketApi, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
+    Export:
+      Name: 'CRWebsocketURL'
+  CRWebsocketEndpoint:
+    Description: "Endpoint for Websocket"
+    Value: !Join [ '', [ !Ref CRWebSocketApi, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
+    Export:
+      Name: 'CRWebsocketEndpoint'      
+  ToolCallReturnTopic:
+    Description: SNS topic that is called after tool call(s) have finished processing.
+    Value: !GetAtt ToolCallReturnTopic.TopicName
+    Export:
+      Name: 'ToolCallReturnTopic'
+  ToolCallReturnTopicARN:
+    Description: ARN to SNS topic that is called after tool call(s) have finished processing.
+    Value: !Ref ToolCallReturnTopic    
+    Export:
+      Name: 'ToolCallReturnTopicARN'
+  WSManageConnectionsPolicy:
+    Value: !Ref WSManageConnectionsPolicy        
+    Export:
+      Name: 'WSManageConnectionsPolicy'                

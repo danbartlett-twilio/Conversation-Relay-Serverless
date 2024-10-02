@@ -1,0 +1,41 @@
+import { SFNClient, StartExecutionCommand } from "@aws-sdk/client-sfn"; 
+const sfnClient = new SFNClient({ region: process.env.AWS_REGION });
+
+export async function invokeStateMachine(tool_calls_object, connectionId, callConnection, ws_domain_name, ws_stage) {
+
+    const tool_calls = Object.values(tool_calls_object).map(tool => {                
+        return { 
+            ...tool, 
+            ws_connectionId: connectionId, 
+            ws_domain_name: ws_domain_name,
+            ws_stage: ws_stage,
+            userContext: callConnection.Item.userContext,
+            call_details: {
+                to_phone: callConnection.Item.To,
+                from_phone: callConnection.Item.From,
+                twilio_call_sid: callConnection.Item.CallSid,
+                twilio_account_sid: callConnection.Item.AccountSid                            
+            },
+            // The name of the tool call MUST align with a Lambda function that has the SAME name
+            lambdaArn: `arn:aws:lambda:${process.env.AWS_REGION}:${process.env.AWS_ACCOUNT_ID}:function:${tool.function.name}`
+        };                                                
+    });          
+
+    // Invoke the State Machine for tool call(s)
+    let stateMachineInput = {
+        Payload: {
+            tool_calls: tool_calls                        
+        }
+    };
+
+    let stepFuncCommand = new StartExecutionCommand({
+        stateMachineArn: process.env.TOOL_CALL_STATE_MACHINE,
+        input: JSON.stringify(stateMachineInput)                    
+    });
+
+    let stepFuncResponse = await sfnClient.send(stepFuncCommand);
+
+    console.log ("stepFuncResponse => ", stepFuncResponse);
+    
+    return true;
+}
