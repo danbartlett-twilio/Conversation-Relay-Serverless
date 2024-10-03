@@ -7,6 +7,9 @@
  * via Twiml and then make copies using the WebSocket ConnectionId.
  * The WebSocket ConnectionId is available for every message sent
  * from Twilio for this session so is used to maintain state.
+ * 
+ * This lambda links the Twiml session established initial with
+ * the Websocket session created by ConversationRelay.
  *  
  */
 

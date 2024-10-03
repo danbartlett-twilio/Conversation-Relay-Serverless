@@ -13,6 +13,7 @@ const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagementapi";
 
+// Code for this lambda broken into several modules 
 import { handlePrompt } from './handle-prompt.mjs';
 import { invokeStateMachine } from './invoke-state-machine.mjs';
 import { returnAllChats, savePrompt} from './database-helpers.mjs';
@@ -52,6 +53,8 @@ export const lambdaHandler = async (event, context) => {
     try {
 
         // Instantiate WebSocket client to return text to Twilio
+        // This client can be used in this lambda and/or passed
+        // to other modules.
         const ws_client = new ApiGatewayManagementApiClient( {
             endpoint: `https://${ws_domain_name}/${ws_stage}`
         });
@@ -59,8 +62,7 @@ export const lambdaHandler = async (event, context) => {
         // Text prompts and dtmf events sent via WebSockets 
         // and tool call completion events follow the same steps and call the LLM
         if (body?.type === "prompt" || body?.type === "dtmf" || toolCallCompletion) {
-
-            let tool_choice = "auto";
+            
             /**
              * SEQUENCE SUMMARY
              * 1) Get chat history
@@ -73,11 +75,17 @@ export const lambdaHandler = async (event, context) => {
             // All messages saved with connectionId as primary key
             // and string with timestamp for simple query that
             // returns chronologically sorted results.
+            // This is the chat history between system, assistant, tools, user
             const messages = await returnAllChats(ddbDocClient, connectionId);    
 
+            // Set the tool choice to auto which lets the LLM decide
+            // whether or not to call a tool. This can be changed if
+            // an event requires calling a tool.
+            let tool_choice = "auto";
+
             // If this is a prompt from the WebSocket connection, then it
-            // is text from the user. Persist the user prompt to the database
-            // and include it in chat messages before calling LLM.
+            // is text (speech-to-text) from the user. Persist the user prompt 
+            // to the database and include it in chat messages before calling LLM.
             if (body?.type === "prompt") { // VOICE PROMPT EVENT
                 
                 // Format the prompt from the user to LLM standards.
@@ -100,10 +108,13 @@ export const lambdaHandler = async (event, context) => {
                  * }
                  */
                 
-                // dtmf handlers are included in the use case configuration
+                // dtmf handlers are included in the use case configuration and
+                // attached to a session. The dtmf handlers can be overwritten
+                // if need as a user moves through a session.
                 let dtmfHandlers = JSON.parse(callConnection.Item.dtmfHandlers);                
                 //console.info("==> dtmfHandlers\n" + JSON.stringify(dtmfHandlers, null, 2));   
                 
+                // Pull the response associated to the digit pressed
                 let dtmfResponse = dtmfHandlers[body.digit];
                 //console.info("==> dtmfResponse\n" + JSON.stringify(dtmfResponse, null, 2));                
 
@@ -123,8 +134,11 @@ export const lambdaHandler = async (event, context) => {
                     if (dtmfResponse.replyWithText) {
                         newUserDTMFMessage.content = newUserDTMFMessage.content + ` Reply to the user with this text: "${dtmfResponse.replyText}"`; 
                         
+                        // If a tool call is required, then the reply text needs
+                        // to sent here because the LLM will not return the text
+                        // because it is will be told to only return the tool call (function)
                         if (dtmfResponse.replyWithFunction) {
-                            // Since we are forcing a tool call, force the text reply
+                            // Since we are forcing a tool call, force the text reply now
                             await replyWithText(ws_client, { text: dtmfResponse.replyText, last: true, ws_connectionId: connectionId });
                         }
                     }
@@ -184,7 +198,7 @@ export const lambdaHandler = async (event, context) => {
                 refusal: llmResult.refusal
             };
             
-            // If tool_calls are present, convert the object to
+            // If tool_calls are present, convert the tool call object to
             // an array to adhere to llm chat messaging format
             if (Object.keys(llmResult.tool_calls).length > 0 ) {
                 // Format tool_calls object into an array
@@ -203,7 +217,10 @@ export const lambdaHandler = async (event, context) => {
                 // Invoke State Machine to call tool(s)
                 await invokeStateMachine(llmResult.tool_calls, connectionId, callConnection, ws_domain_name, ws_stage);
 
-                // Inject text to speech here to account for delay in response from tool call.
+                // Inject text to speech here to account for delay in response 
+                // from tool call. This could be personalize and run optionally
+                // depending to the tool call(s). Latency could be low enough
+                // that this is not needed.
                 const timeFillers = ["One second.", "I'll get that.", "Working on that.", "One moment.", "Just a sec.", "Getting that."];
                 await replyWithText(ws_client, {   
                     text: timeFillers[ ( Math.floor (Math.random() * timeFillers.length) ) ], 
@@ -225,7 +242,9 @@ export const lambdaHandler = async (event, context) => {
              *  "utteranceUntilInterrupt": "Life is a complex set of",
              *  "durationUntilInterruptMs": "460"
              * }
-
+             * 
+             * This implementation does not track interruptions.
+             * 
              */
 
             // PUT records
@@ -254,6 +273,8 @@ export const lambdaHandler = async (event, context) => {
              *  "accountSid": "ACe6ee4b20287adb6e5c9ec4169b56d2bb",
              *  "applicationSid": "AP3c07638b2397e5e3f1e459fb1cc10000"
              * }
+             * 
+             * This implementation does utilize the setup event.
              */
             
             // PUT record
@@ -270,6 +291,8 @@ export const lambdaHandler = async (event, context) => {
              *  "type" : "end",
              *  "handoffData": "{\"reasonCode\":\"live-agent-handoff\", \"reason\": \"The caller wants to talk to a real person\"}"
              * }
+             * 
+             * This implementation does not use the end event.
              */
 
             // PUT record

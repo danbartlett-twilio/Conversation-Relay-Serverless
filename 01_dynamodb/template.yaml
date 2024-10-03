@@ -50,6 +50,11 @@ Resources:
           Projection:
             ProjectionType: "ALL"
 
+  ########################################
+  # Lambda Layer available to all lambdas
+  # This layer makes it easy to build
+  # update expressions.
+  ########################################
   ConversationRelayDynamoDBUtilLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:

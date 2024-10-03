@@ -1,6 +1,7 @@
 // Function to build dynamic expressions for UpdateItem
 // Takes in object with fields and breaks keys and values
 // into the necessary parts for the UpdateItem operation
+// Essentially this function formats an update express.
 async function buildDynExpressions(fields) {
   
     let returnObj = {
