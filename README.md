@@ -49,7 +49,7 @@ echo 'default' > aws-profile.profile
 ```
 
 ### 3. Install AWS SAM CLI
-Install the necessary package from (https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)[https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html]
+Install the necessary package from [https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 
 
 ### 4. Deploy Cloud Formation Stack
