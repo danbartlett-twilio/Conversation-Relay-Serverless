@@ -1,5 +1,17 @@
 import { QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
+/**
+ * 
+ * savePrompt
+ * 
+ * This helper function saves a prompt to the database. This
+ * is the chat history for a session and the sort key is chronological
+ * so that chats are automatically sorted by time.
+ * 
+ * This implement sets an TTL (expireAt) date to delete chats automatically.
+ * The TTL would presumably be changed in production uses.
+ * 
+ */
 export async function savePrompt(ddbDocClient, connectionId, newChatMessage) {
     // Persist the current prompt so it is included 
     // in subsequent calls.
@@ -18,6 +30,12 @@ export async function savePrompt(ddbDocClient, connectionId, newChatMessage) {
     return result;   
 };
 
+/**
+ * returnAllChats
+ * 
+ * Get all chats for a current session. Sort key is a timestamp
+ * to chats are automatically returned in chronological order.
+ */
 export async function returnAllChats(ddbDocClient, connectionId) {
     
     const chatsRaw = await ddbDocClient.send(new QueryCommand({ 

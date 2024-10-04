@@ -77,17 +77,14 @@ export const lambdaHandler = async (event, context) => {
     let voice = (settings.voice) ? settings.voice : "en-US-Journey-O";
     let dtmfDetection = (settings.dtmfDetection) ? settings.dtmfDetection : false;    
     let interruptByDtmf = (settings.interruptByDtmf) ? settings.interruptByDtmf : false;
+    
+    // DTMF Handlers are passed into the session from the use case configuration
+    // but can be changed dynamically during the session!
     let dtmfHandlers = useCase.Item.dtmfHandlers;
 
     // This is the function "manifest", or all tools available to call
+    // This can be changed dynamically during the session!
     let tools = useCase.Item.tools;
-
-    // *** !!! single STATE MACHINE NOW No need to track per Use CAse 
-    // Tool calls made by LLM are routed to a State Machine where any number of
-    // function calls (1 - n) are called in parallel and upon completion
-    // the default handler is called to process the result of the tool call(s)
-    // and return a response to the user.
-    //let tools_state_machine_arn = useCase.Item.tools_state_machine_arn;
 
     try {
 
@@ -102,8 +99,8 @@ export const lambdaHandler = async (event, context) => {
             sk: "connection",
             useCase: useCaseTitle,
             userContext: userContext,
-            tools: tools, // Reduce DB Calls by copying in tools to connection record            
-            dtmfHandlers: dtmfHandlers,
+            tools: tools, // tools passed into session -- can be changed dynamically.
+            dtmfHandlers: dtmfHandlers, // dtmf handlers passed into session -- can be changed dynamically.
             expireAt: Math.floor(Date.now() / 1000) + 120, // Delete Record after 2 minutes
             ...twilio_body,            
         };
