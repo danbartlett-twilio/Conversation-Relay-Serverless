@@ -17,7 +17,7 @@ import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagem
 import { handlePrompt } from './handle-prompt.mjs';
 import { invokeStateMachine } from './invoke-state-machine.mjs';
 import { returnAllChats, savePrompt} from './database-helpers.mjs';
-import { replyWithText } from './reply-with-text.mjs';
+import { replyToWS } from './reply-to-ws.mjs';
 
 export const lambdaHandler = async (event, context) => {    
 
@@ -138,8 +138,12 @@ export const lambdaHandler = async (event, context) => {
                         // to sent here because the LLM will not return the text
                         // because it is will be told to only return the tool call (function)
                         if (dtmfResponse.replyWithFunction) {
-                            // Since we are forcing a tool call, force the text reply now
-                            await replyWithText(ws_client, { text: dtmfResponse.replyText, last: true, ws_connectionId: connectionId });
+                            // Since we are forcing a tool call, force the text reply now                            
+                            await replyToWS(ws_client, connectionId, {   
+                                type:"text",
+                                token: dtmfResponse.replyText, 
+                                last: true
+                            });                            
                         }
                     }
 
@@ -217,17 +221,28 @@ export const lambdaHandler = async (event, context) => {
                 // Invoke State Machine to call tool(s)
                 await invokeStateMachine(llmResult.tool_calls, connectionId, callConnection, ws_domain_name, ws_stage);
 
-                // Inject text to speech here to account for delay in response 
-                // from tool call. This could be personalize and run optionally
+                // Inject text to speech here or a waiting sound to account for delay  
+                // in response from tool call. This could be personalize and run optionally
                 // depending to the tool call(s). Latency could be low enough
                 // that this is not needed.
+                
+                // Speech Delay
+                /*
                 const timeFillers = ["One second.", "I'll get that.", "Working on that.", "One moment.", "Just a sec.", "Getting that."];
-                await replyWithText(ws_client, {   
-                    text: timeFillers[ ( Math.floor (Math.random() * timeFillers.length) ) ], 
-                    last: true, 
-                    ws_connectionId: connectionId 
+                await replyToWS(ws_client, connectionId, {   
+                    type:"text",
+                    token: timeFillers[ ( Math.floor (Math.random() * timeFillers.length) ) ], 
+                    last: true
                 });
+                */
 
+                // Recorded File Delay (with mp3 file)
+                await replyToWS(ws_client, connectionId, {   
+                    "type":"play",
+                    "source": process.env.TOOL_CALL_WAITING_MP3, // required link to mp3 file like "https://api.twilio.com/cowbell.mp3"
+                    "loop": 1,
+                    "preemptible": true // Default is false
+                });
 
             }
 

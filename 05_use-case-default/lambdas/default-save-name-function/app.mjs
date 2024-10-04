@@ -20,7 +20,8 @@ async function saveName(args, evt) {
         Item: {
             pk: evt.call_details.from_phone,
             sk: "profile",
-            pk1: "user",
+            pk1: "profile",
+            sk1: evt.call_details.from_phone,
             firstName: args.firstName,
             lastName: args.lastName,
             useCase: "defaultUseCase"         
