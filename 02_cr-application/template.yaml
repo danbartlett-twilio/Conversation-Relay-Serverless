@@ -6,7 +6,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 15
+    Timeout: 35
 
 Resources:
 
@@ -214,7 +214,7 @@ Resources:
       Runtime: nodejs20.x
       Architectures:
         - arm64     
-      MemorySize: 128      
+      MemorySize: 1024      
       Environment:
         Variables:          
           TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName           
@@ -223,6 +223,7 @@ Resources:
           #TOOL_CALL_WAITING_MP3: "link-to-mp3-file"
           # USE AWS SECRETS MANAGER
           OPENAI_API_KEY: 'YOUR-OPENAI-API-KEY'
+          AWS_ACCOUNT_ID: !Ref AWS::AccountId
       Layers:
         - !Ref ConversationRelayOpenAIClientLayer
       Events:

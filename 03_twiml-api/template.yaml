@@ -11,6 +11,7 @@ Resources:
   TwimlAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
+      Description: Rest API used to handle inbound requests from Twilio.
       CorsConfiguration:
         AllowMethods:
           - "*"

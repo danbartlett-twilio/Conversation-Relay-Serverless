@@ -19,7 +19,7 @@ export const lambdaHandler = async (event, context) => {
      * 3) Determine model to use
      * 4) PUT db record with event.requestContext.requestId as pk
      * 5) Create ws url adding cid param using event.requestContext.requestId
-     * 6) Generate Twiml to spin up VoxRay connection
+     * 6) Generate Twiml to spin up ConversationRelay connection
      */
     
     console.info("EVENT ==>\n" + JSON.stringify(event, null, 2));    
@@ -74,7 +74,8 @@ export const lambdaHandler = async (event, context) => {
 
     let settings = JSON.parse(useCase.Item.settings);
     let welcomeGreeting = (settings.welcomeGreeting) ? settings.welcomeGreeting : "Hello, how can I help you?";
-    let voice = (settings.voice) ? settings.voice : "en-US-Journey-O";
+    let ttsProvider = (settings.ttsProvider) ? settings.ttsProvider : "amazon"; //google
+    let voice = (settings.voice) ? settings.voice : "Amy-Generative"; //Matt-Generative, Ruth-Generative, en-US-Journey-O;
     let dtmfDetection = (settings.dtmfDetection) ? settings.dtmfDetection : false;    
     let interruptByDtmf = (settings.interruptByDtmf) ? settings.interruptByDtmf : false;
     
@@ -144,11 +145,11 @@ export const lambdaHandler = async (event, context) => {
         
         let ws_url = `${process.env.WS_URL}?cid=${event.requestContext.requestId}`;
         
-        // 6) Generate Twiml to spin up VoxRay connection        
+        // 6) Generate Twiml to spin up ConversationRelay connection        
 
         let twiml = `<?xml version="1.0" encoding="UTF-8"?><Response>    
     <Connect>
-        <Voxray url="${ws_url}" welcomeGreeting="${welcomeGreeting}" voice="${voice}" dtmfDetection="${dtmfDetection}" interruptByDtmf="${interruptByDtmf}" />
+        <ConversationRelay url="${ws_url}" welcomeGreeting="${welcomeGreeting}" ttsProvider="${ttsProvider}" voice="${voice}" dtmfDetection="${dtmfDetection}" interruptByDtmf="${interruptByDtmf}" />
     </Connect>
 </Response>`;
         

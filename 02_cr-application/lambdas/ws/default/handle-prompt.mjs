@@ -12,7 +12,7 @@ import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi
 
 export async function handlePrompt(promptObj) {
 
-    let model = (process.env.LLM_MODEL) ? process.env.LLM_MODEL : "gpt-4-turbo";
+    let model = (process.env.LLM_MODEL) ? process.env.LLM_MODEL : "gpt-4o-mini"; // "gpt-4-turbo";
 
     // SET THE PROMPT TO OPENAI
     const prompt = {

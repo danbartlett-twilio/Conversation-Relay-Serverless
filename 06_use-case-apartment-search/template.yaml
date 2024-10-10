@@ -11,6 +11,10 @@ Parameters:
     Type: String
     Default: '1'  
 
+Globals:
+  Function:
+    Timeout: 35
+
 Resources:
 
   ##########################################################################
@@ -41,7 +45,6 @@ Resources:
       Runtime: nodejs20.x      
       Architectures:
         - arm64
-      Timeout: 5
       MemorySize: 128
       Layers: 
         - !Ref ApartmentSearchUtlitiyLayer
@@ -71,7 +74,6 @@ Resources:
       Runtime: nodejs20.x      
       Architectures:
         - arm64
-      Timeout: 5
       MemorySize: 128
       Layers: 
         - !Ref ApartmentSearchUtlitiyLayer
@@ -100,7 +102,6 @@ Resources:
       Runtime: nodejs20.x      
       Architectures:
         - arm64      
-      Timeout: 5
       MemorySize: 128
       Layers: 
         - !Ref ApartmentSearchUtlitiyLayer
@@ -129,7 +130,6 @@ Resources:
       Runtime: nodejs20.x      
       Architectures:
         - arm64
-      Timeout: 5
       MemorySize: 128
       Layers: 
         - !Ref ApartmentSearchUtlitiyLayer
@@ -159,7 +159,6 @@ Resources:
       Runtime: nodejs20.x      
       Architectures:
         - arm64  
-      Timeout: 5
       MemorySize: 128
       Layers: 
         - !Ref ApartmentSearchUtlitiyLayer
@@ -188,7 +187,6 @@ Resources:
       Runtime: nodejs20.x      
       Architectures:
         - arm64
-      Timeout: 5
       MemorySize: 128
       Policies:        
         - DynamoDBCrudPolicy:

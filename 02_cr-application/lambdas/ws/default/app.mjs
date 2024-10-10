@@ -180,7 +180,7 @@ export const lambdaHandler = async (event, context) => {
 
             }
 
-            //console.info("messages before calling LLM\n" + JSON.stringify(messages, null, 2));   
+            console.info("messages before calling LLM\n" + JSON.stringify(messages, null, 2));   
 
             // Call the LLM passing context and chat history
             let llmResult = await handlePrompt({
@@ -193,7 +193,7 @@ export const lambdaHandler = async (event, context) => {
                 ws_client:ws_client
             });
 
-            //console.info("llmResult\n" + JSON.stringify(llmResult, null, 2));
+            console.info("llmResult\n" + JSON.stringify(llmResult, null, 2));
 
             // Format the llmResult into a chat message to persist to the database
             let newAssistantChatMessage = {
@@ -237,13 +237,14 @@ export const lambdaHandler = async (event, context) => {
                 */
 
                 // Recorded File Delay (with mp3 file)
+                /*
                 await replyToWS(ws_client, connectionId, {   
                     "type":"play",
                     "source": process.env.TOOL_CALL_WAITING_MP3, // required link to mp3 file like "https://api.twilio.com/cowbell.mp3"
                     "loop": 1,
                     "preemptible": true // Default is false
                 });
-
+                */
             }
 
         } else if (body?.type === "interrupt") {
