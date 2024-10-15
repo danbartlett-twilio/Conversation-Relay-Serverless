@@ -236,8 +236,8 @@ export const lambdaHandler = async (event, context) => {
                 });
                 */
 
-                // Recorded File Delay (with mp3 file)
-                /*
+                // Recorded File Delay (with mp3 file)         
+                /*       
                 await replyToWS(ws_client, connectionId, {   
                     "type":"play",
                     "source": process.env.TOOL_CALL_WAITING_MP3, // required link to mp3 file like "https://api.twilio.com/cowbell.mp3"

@@ -48,7 +48,13 @@ export const lambdaHandler = async (event, context) => {
     let prompt = useCase.Item.prompt;
 
     if (user.Item) {
-        prompt = prompt.replace('<<USER_CONTEXT>>', `The name of the person you are talking to is ${user.Item.firstName} ${user.Item.lastName}. You can use this person's first name. If needed, their phone number is ${twilio_body.From}.`);
+        let rString = `The name of the person you are talking to is ${user.Item.firstName} ${user.Item.lastName}. You can use this person's first name. If needed, their phone number is ${twilio_body.From}.`;
+        if (user.Item.email) {
+            rString = rString + ` Their email address is ${user.Item.email} -- you may offer to send emails.`;
+        } else {
+            rString = rString + ` You do not have their email address so cannot offer to send emails.`
+        }
+        prompt = prompt.replace('<<USER_CONTEXT>>', rString);
     } else {
         prompt = prompt.replace('<<USER_CONTEXT>>', `First ask for the user's first and last name and then call a tool to save those details.`);
     }
@@ -116,6 +122,8 @@ export const lambdaHandler = async (event, context) => {
           day: '2-digit',
           month: 'long',
           year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
           timeZone: timeZone
         });
         

@@ -1,0 +1,16 @@
+{
+    "name": "send-email",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.cjs",
+    "repository": "",
+    "author": "",
+    "license": "MIT",
+    "dependencies": {    
+    },
+    "scripts": {
+    },
+    "devDependencies": {
+    }
+  }
+  

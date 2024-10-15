@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: Enable API calls to Twilio to send Messages (SMS, WhatsApp)
 
 Parameters:  
-  ConversationRelayTwilioClientLayerVersion:
+  ConversationRelayTwilioSendGridEmailLayerVersion:
     Type: String
     Default: '1'    
 
@@ -14,18 +14,18 @@ Resources:
   #  All calls to Twilio API calls (success or fail) are sent to this topic 
   #  for futher downstream processing.
   ##########################################################################
-  TwilioSendMessageTopic:
+  TwilioSendEmailTopic:
     Type: AWS::SNS::Topic
 
   ##########################################################################
-  #  (TwilioSendMessageFunction) Lambda Function                            
+  #  (TwilioSendEmailFunction) Lambda Function                            
   ##########################################################################
-  TwilioSendMessageFunction:    
+  TwilioSendEmailFunction:    
     Type: AWS::Serverless::Function
     Properties:      
-      FunctionName: TwilioSendMessageFunction
-      Description: Generic Send Message (SMS/WhatsApp) available to all tools
-      CodeUri: lambdas/twilio-send-message/
+      FunctionName: TwilioSendEmailFunction
+      Description: Generic Send Email available to all tools
+      CodeUri: lambdas/twilio-send-email/
       AutoPublishAlias: live
       Handler: app.lambdaHandler
       Runtime: nodejs20.x      
@@ -36,32 +36,30 @@ Resources:
       Layers:
         -
           !Sub 
-          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelayTwilioClientLayer:${cv}'
-          - cv : !Ref 'ConversationRelayTwilioClientLayerVersion'
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelayTwilioSendGridEmailLayer:${cv}'
+          - cv : !Ref 'ConversationRelayTwilioSendGridEmailLayerVersion'
       Environment:
         Variables:          
           # Use AWS Secrets Manager to save these
-          TWILIO_ACCOUNT_SID: "YOUR-TWILIO-ACCOUNT-SID"
-          TWILIO_AUTH_TOKEN: "YOUR-TWILIO-AUTH-TOKEN"         
+          SENDGRID_API_KEY: "YOUR-TWILIO-SENDGRID_API_KEY"                    
       Events:
         SNSEvent:
           Type: SNS
           Properties:            
-            Topic: !Ref TwilioSendMessageTopic          
-
+            Topic: !Ref TwilioSendEmailTopic          
 
 ##########################################################################
 #   Outputs
 ##########################################################################
 Outputs:
   
-  TwilioSendMessageTopic:
-    Description: SNS topic that is called to send a message via Twilio
-    Value: !GetAtt TwilioSendMessageTopic.TopicName
+  TwilioSendEmailTopic:
+    Description: SNS topic that is called to send an email via Twilio
+    Value: !GetAtt TwilioSendEmailTopic.TopicName
     Export:
-      Name: 'TwilioSendMessageTopic'
-  TwilioSendMessageTopicARN:
-    Description: ARN to SNS SNS topic that is called to send a message via Twilio
-    Value: !Ref TwilioSendMessageTopic    
+      Name: 'TwilioSendEmailTopic'
+  TwilioSendEmailTopicARN:
+    Description: ARN to SNS topic that is called to send an email via Twilio
+    Value: !Ref TwilioSendEmailTopic    
     Export:
-      Name: 'TwilioSendMessageTopicARN' 
+      Name: 'TwilioSendEmailTopicARN'

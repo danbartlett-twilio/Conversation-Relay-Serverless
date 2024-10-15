@@ -49,6 +49,17 @@ Resources:
       LicenseInfo: 'MIT'
       RetentionPolicy: Retain
 
+  ConversationRelayTwilioSendGridEmailLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ConversationRelayTwilioSendGridEmailLayer
+      Description: Allows for calls to Twilio SendGrid using SDK
+      ContentUri: layers/layer-cr-sendgrid-email-client/
+      CompatibleRuntimes:
+        - nodejs20.x
+      LicenseInfo: 'MIT'
+      RetentionPolicy: Retain
+
   ConversationRelayRandomDataGeneratorLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -116,7 +127,19 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: "ListAvailableApartmentsFunction"
         - LambdaInvokePolicy:
-            FunctionName: "SendAppointmentConfirmationSmsFunction"                        
+            FunctionName: "SendAppointmentConfirmationSmsFunction"
+        # RESTAURANT ORDERING USE CASE
+        - LambdaInvokePolicy:
+            FunctionName: "PlaceOrderFunction"
+        - LambdaInvokePolicy:
+            FunctionName: "SendRestaurantSmsFunction"
+        - LambdaInvokePolicy:
+            FunctionName: "SendRestaurantEmailFunction"       
+        - LambdaInvokePolicy:
+            FunctionName: "CheckRestaurantPickupTime"
+        - LambdaInvokePolicy:
+            FunctionName: "CheckRestaurantDeliveryTime"
+            
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
@@ -222,7 +245,7 @@ Resources:
           TOOL_CALL_WAITING_MP3: "https://bubbles-iguana-1151.twil.io/assets/keyboard-typing-5997.mp3"
           #TOOL_CALL_WAITING_MP3: "link-to-mp3-file"
           # USE AWS SECRETS MANAGER
-          OPENAI_API_KEY: 'YOUR-OPENAI-API-KEY'
+          OPENAI_API_KEY: 'YOUR-OPENAI-API-KEY'      
           AWS_ACCOUNT_ID: !Ref AWS::AccountId
       Layers:
         - !Ref ConversationRelayOpenAIClientLayer
