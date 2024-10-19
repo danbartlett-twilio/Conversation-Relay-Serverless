@@ -59,87 +59,20 @@ Build the stack and then deploy it using the following commands:
 ```bash
 cd 01_dynamodb/
 sam build
-sam deploy --guided --stack-name CONVERSATION-RELAY-DATABASE --template template.yaml --profile $(cat ../aws-profile.profile) 
-```
-
-Respond to the prompts as seen below:
-```bash
-Configuring SAM deploy
-======================
-
-        Looking for config file [samconfig.toml] :  Not found
-
-        Setting default arguments for 'sam deploy'
-        =========================================
-        Stack Name [CONVERSATION-RELAY-DATABASE]: 
-        AWS Region [us-east-1]: 
-        Parameter CurrentEnvironment [DEV]: 
-        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
-        Confirm changes before deploy [y/N]: y
-        #SAM needs permission to be able to create roles to connect to the resources in your template
-        Allow SAM CLI IAM role creation [Y/n]: y
-        #Preserves the state of previously provisioned resources when an operation fails
-        Disable rollback [y/N]: n
-        Save arguments to configuration file [Y/n]: y
-        SAM configuration file [samconfig.toml]: 
-        SAM configuration environment [default]:
-....
-
-Previewing CloudFormation changeset before deployment
-======================================================
-Deploy this changeset? [y/N]: y 
-```
-
-You should see a successful output similar to below:
-```bash
-CloudFormation outputs from deployed stack
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Outputs                                                                                                                                                                    
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Key                 DynamonDBArn                                                                                                                                           
-Description         -                                                                                                                                                      
-Value               arn:aws:dynamodb:us-east-1:231521174640:table/ConversationRelayAppDatabase                                                                             
-
-Key                 DynamonDBTableName                                                                                                                                     
-Description         -                                                                                                                                                      
-Value               ConversationRelayAppDatabase                                                                                                                           
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+sam deploy --resolve-s3 --stack-name CONVERSATION-RELAY-DATABASE --template template.yaml --profile $(cat ../aws-profile.profile) 
 ```
 
 #### 2. Conversation Relay Application Stack
 Build the stack and then deploy it using the following commands:
 ```bash
-cd ../02_cr-application
+cd 02_cr-application/
+cd layers/layer-cr-twilio-client/nodejs
+npm install
+cd ../../layer-cr-open-ai-client 
+npm install
+cd ../.. 
 sam build
-sam deploy --guided --stack-name CONVERSATION-RELAY-APPLICATION --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
-```
-
-Respond to the prompts as seen below:
-```bash
-Configuring SAM deploy
-======================
-
-        Looking for config file [samconfig.toml] :  Not found
-
-        Setting default arguments for 'sam deploy'
-        =========================================
-        Stack Name [CONVERSATION-RELAY-APPLICATION]: 
-        AWS Region [us-east-1]: 
-        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
-        Confirm changes before deploy [y/N]: y
-        #SAM needs permission to be able to create roles to connect to the resources in your template
-        Allow SAM CLI IAM role creation [Y/n]: y
-        #Preserves the state of previously provisioned resources when an operation fails
-        Disable rollback [y/N]: n
-        Save arguments to configuration file [Y/n]: y
-        SAM configuration file [samconfig.toml]: 
-        SAM configuration environment [default]: n
-
-....
-
-Previewing CloudFormation changeset before deployment
-======================================================
-Deploy this changeset? [y/N]: y
+sam deploy --resolve-s3 --stack-name CONVERSATION-RELAY-APPLICATION --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
 ```
 
 #### 3. TwiML API Stack
@@ -147,35 +80,7 @@ Build the stack and then deploy it using the following commands:
 ```bash
 cd ../03_twiml-api/
 sam build
-sam deploy --guided --stack-name CONVERSATION-RELAY-TWIML-API --template template.yaml --profile $(cat ../aws-profile.profile) 
-```
-
-Respond to the questions as seen below:
-```bash
-Configuring SAM deploy
-======================
-
-        Looking for config file [samconfig.toml] :  Not found
-
-        Setting default arguments for 'sam deploy'
-        =========================================
-        Stack Name [CONVERSATION-RELAY-TWIML-API]: 
-        AWS Region [us-east-1]: 
-        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
-        Confirm changes before deploy [y/N]: y
-        #SAM needs permission to be able to create roles to connect to the resources in your template
-        Allow SAM CLI IAM role creation [Y/n]: y
-        #Preserves the state of previously provisioned resources when an operation fails
-        Disable rollback [y/N]: N
-        CallSetupFunction has no authentication. Is this okay? [y/N]: y
-        Save arguments to configuration file [Y/n]: y
-        SAM configuration file [samconfig.toml]: 
-        SAM configuration environment [default]: 
-....
-
-Previewing CloudFormation changeset before deployment
-======================================================
-Deploy this changeset? [y/N]: y
+sam deploy --resolve-s3 --stack-name CONVERSATION-RELAY-TWIML-API --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM
 ```
 
 #### 4. Send Message Util
@@ -183,110 +88,47 @@ Build the stack and then deploy it using the following commands:
 ```bash
 cd ../04_util-send-message 
 sam build
-sam deploy --guided --stack-name UTIL-SEND-MESSAGE --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+sam deploy --resolve-s3 --stack-name UTIL-SEND-MESSAGE --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
 ```
 
-Respond to the questions as seen below:
-```bash
-Configuring SAM deploy
-======================
-
-        Looking for config file [samconfig.toml] :  Not found
-
-        Setting default arguments for 'sam deploy'
-        =========================================
-        Stack Name [UTIL-SEND-MESSAGE]: 
-        AWS Region [us-east-1]: 
-        Parameter ConversationRelayTwilioClientLayerVersion [1]: 
-        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
-        Confirm changes before deploy [y/N]: y
-        #SAM needs permission to be able to create roles to connect to the resources in your template
-        Allow SAM CLI IAM role creation [Y/n]: y
-        #Preserves the state of previously provisioned resources when an operation fails
-        Disable rollback [y/N]: n
-        Save arguments to configuration file [Y/n]: y
-        SAM configuration file [samconfig.toml]: 
-        SAM configuration environment [default]: 
-....
-
-Previewing CloudFormation changeset before deployment
-======================================================
-Deploy this changeset? [y/N]: y
-```
-
-#### 5. Default Use Case
+#### 5. Send Email Util
 Build the stack and then deploy it using the following commands:
 ```bash
-cd ../05_use-case-default
+cd ../05_util-send-email
 sam build
-sam deploy --guided --stack-name USE-CASE-DEFAULT --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+sam deploy --resolve-s3 --stack-name UTIL-SEND-EMAIL --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
 ```
 
-Respond to the questions as seen below:
-```bash
-Configuring SAM deploy
-======================
-
-        Looking for config file [samconfig.toml] :  Not found
-
-        Setting default arguments for 'sam deploy'
-        =========================================
-        Stack Name [USE-CASE-DEFAULT]: 
-        AWS Region [us-east-1]: 
-        Parameter ConversationRelayDynamoDBUtilLayerVersion [1]: 
-        Parameter ConversationRelaySaveToolCallResultLayerVersion [1]: 
-        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
-        Confirm changes before deploy [y/N]: y
-        #SAM needs permission to be able to create roles to connect to the resources in your template
-        Allow SAM CLI IAM role creation [Y/n]: y
-        #Preserves the state of previously provisioned resources when an operation fails
-        Disable rollback [y/N]: n
-        Save arguments to configuration file [Y/n]: y
-        SAM configuration file [samconfig.toml]: 
-        SAM configuration environment [default]: 
-....
-
-Previewing CloudFormation changeset before deployment
-======================================================
-Deploy this changeset? [y/N]: y
-```
-
-#### 6. Apartment Search Use Case
+#### 6. Default Use Case
 Build the stack and then deploy it using the following commands:
 ```bash
-cd ../06_use-case-apartment-search
+cd ../06_use-case-default
 sam build
-sam deploy --guided --stack-name USE-CASE-DEFAULT --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+sam deploy --resolve-s3 --stack-name USE-CASE-DEFAULT --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
 ```
 
-Respond to the questions as seen below:
+#### 7. Apartment Search Use Case
+Build the stack and then deploy it using the following commands:
 ```bash
-Configuring SAM deploy
-======================
-
-        Looking for config file [samconfig.toml] :  Not found
-
-        Setting default arguments for 'sam deploy'
-        =========================================
-        Stack Name [USE-CASE-APT-SEARCH]: 
-        AWS Region [us-east-1]: 
-        Parameter ConversationRelayRandomDataGeneratorLayerVersion [1]: 
-        Parameter ConversationRelaySaveToolCallResultLayerVersion [1]: 
-        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
-        Confirm changes before deploy [y/N]: y
-        #SAM needs permission to be able to create roles to connect to the resources in your template
-        Allow SAM CLI IAM role creation [Y/n]: y
-        #Preserves the state of previously provisioned resources when an operation fails
-        Disable rollback [y/N]: n
-        Save arguments to configuration file [Y/n]: y
-        SAM configuration file [samconfig.toml]: 
-        SAM configuration environment [default]: 
-....
-
-Previewing CloudFormation changeset before deployment
-======================================================
-Deploy this changeset? [y/N]: y
+cd ../07_use-case-apartment-search
+sam build
+sam deploy --resolve-s3 --stack-name USE-CASE-DEFAULT --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
 ```
+
+#### 8. Restaurant Order Use Case
+Build the stack and then deploy it using the following commands:
+```bash
+cd ../08_use-case-restaurant-order
+sam build
+sam deploy --resolve-s3 --stack-name USE-CASE-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM
+```
+
+## Add DynamoDB Items
+Each use case as a DyanamoDB Item that needs be added to the database. The Item is stored in the /configuration/dynamo-item.json in each respective use case's folder (e.g /06_use-case-default/configuration/dynamo-item.json). Copy that JSON and then add it to the DynamoDB making sure to uncheck the "View DynamoDB JSON" button at the top of JSON view. 
+
+## Configure your phone number for the 
+
+
 
 ## Application Workflow
 Conversation Relay coordinates the data flow between text to speech and ASR providers an communicates bi-directional with your app through websockets:

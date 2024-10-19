@@ -1,4 +1,4 @@
 ====================================================
 DEPLOY TEMPLATE
 ====================================================
-sam deploy --stack-name UTIL-SEND-EMAIL --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+sam deploy --resolve-s3 --stack-name UTIL-SEND-EMAIL --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 

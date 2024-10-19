@@ -1,4 +1,4 @@
 ====================================================
 DEPLOY TEMPLATE
 ====================================================
-sam deploy --stack-name CONVERSATION-RELAY-DATABASE --template template.yaml --profile $(cat ../aws-profile.profile) 
+sam deploy --resolve-s3 --stack-name CONVERSATION-RELAY-DATABASE --template template.yaml --profile $(cat ../aws-profile.profile) 
