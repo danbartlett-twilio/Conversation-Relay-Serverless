@@ -16,6 +16,8 @@ Resources:
         Enabled: true
       TableName: "ConversationRelayAppDatabase"
       BillingMode: 'PAY_PER_REQUEST'
+      StreamSpecification:
+        StreamViewType: "NEW_IMAGE"
       AttributeDefinitions:
         -
           AttributeName: "pk"
@@ -66,6 +68,62 @@ Resources:
       LicenseInfo: 'MIT'
       RetentionPolicy: Retain
 
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                  - dynamodb:ListStreams
+                Resource: !GetAtt DDBTable.StreamArn
+
+  EventSourceDDBTableStream:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      Enabled: True
+      EventSourceArn: !GetAtt DDBTable.StreamArn
+      FunctionName: !GetAtt ProcessEventLambda.Arn
+      StartingPosition: LATEST
+
+  ProcessEventLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ProcessEventLamda
+      Description: Lambda to Process DDB Steam Event 
+      CodeUri: lambdas/process-event/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64   
+      Timeout: 5
+      MemorySize: 128
+      Role: !GetAtt LambdaExecutionRole.Arn
+          
 Outputs:
   DynamonDBTableName:
     Value: !Ref DDBTable
@@ -77,3 +135,8 @@ Outputs:
       - Arn
     Export:
       Name: 'CRPrimaryDynamoTableArn'
+  StreamArn:
+    Description: DynamoDB Table ARN created for this example
+    Value: !GetAtt DDBTable.StreamArn
+    Export:
+      Name: 'CRPrimaryDynamoTableStreamArn'
