@@ -459,7 +459,262 @@ Resources:
             Path: /call-setup-restaurant-ordering
             Method: post
             ApiId: !Ref TwimlAPI
-            
+  
+  GetCallsAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: Rest API used to lookup current and past calls.
+      CorsConfiguration:
+        AllowMethods:
+          - "GET"
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+
+  GetCallsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: "Gets list of calls"
+      CodeUri: lambdas/util/get-calls/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      Tags:
+        API: "Lookup"
+        Method: "Get"
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrimaryDynamoDBTable 
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref PrimaryDynamoDBTable
+        # - Statement:
+        #   - Effect: Allow
+        #     Action:
+        #     - 'execute-api:ManageConnections'
+        #     Resource:
+        #     - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+        #   - Effect: Allow
+        #     Action:
+        #     - 'sns:Publish'
+        #     Resource:
+        #     - !Ref TwilioSendMessageTopic
+      Events:
+        GetCallsGetEvent:
+          Type: HttpApi
+          Properties:
+            Path: /get-calls
+            Method: get
+            ApiId: !Ref GetCallsAPI
+        GetCallsByPhoneGetEvent:
+          Type: HttpApi
+          RequestParameters:
+            method.request.path.phone: true
+          Properties:
+            Path: /get-calls/{phone}
+            Method: get
+            ApiId: !Ref GetCallsAPI
+
+  # Websocket API
+  UIWebSocketApi:
+    Type: "AWS::ApiGatewayV2::Api"
+    Properties:
+      Name: UIWebSocketApi
+      Description: Websocket API between Backend and UI
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+
+  # OnConnectLambda
+  UIOnConnectLambdaFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-ui-onconnect-function"
+      Description: Lambda to handle connection to websocket api
+      CodeUri: lambdas/websocket/ui-onconnect/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrimaryDynamoDBTable 
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PrimaryDynamoDBTable 
+
+  # Function permissions grant an AWS service or another account permission to use a function
+  UIOnConnectFunctionResourcePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref UIOnConnectLambdaFunction
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
+  UIOnConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      Description: OnConnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIOnConnectLambdaFunction.Arn}/invocations
+  UIOnConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      RouteKey: $connect
+      AuthorizationType: NONE
+      OperationName: OnConnectRoute
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref UIOnConnectIntegration
+
+  # Default Lambda
+  UIDefaultWSLambdaFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-ui-default-function"
+      Description: Lambda to handle posts coming into websocket api
+      CodeUri: lambdas/websocket/ui-default/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      MemorySize: 1024
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrimaryDynamoDBTable 
+          AWS_ACCOUNT_ID: !Ref AWS::AccountId
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PrimaryDynamoDBTable 
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
+  # Function permissions grant an AWS service or another account permission to use a function
+  UIDefaultWSFunctionResourcePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref UIDefaultWSLambdaFunction
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
+  UIDefaultWSIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      Description: Default WS Route Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIDefaultWSLambdaFunction.Arn}/invocations
+  UIDefaultWSRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      RouteKey: $default
+      AuthorizationType: NONE
+      OperationName: DefaultRoute
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref UIDefaultWSIntegration
+
+  UIOnDisconnectLambdaFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-ui-ondisconnect-function"
+      Description: Lambda to handle closed websocket connection
+      CodeUri: lambdas/websocket/ui-disconnect/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      MemorySize: 128
+
+  UIOnDisconnectFunctionResourcePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref UIOnDisconnectLambdaFunction
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
+  UIOnDisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      Description: OnDisconnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIOnDisconnectLambdaFunction.Arn}/invocations
+  UIOnDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      OperationName: OnDisconnectRoute
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref UIOnDisconnectIntegration
+
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - UIOnConnectRoute
+      - UIDefaultWSRoute
+      - UIOnDisconnectRoute
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: prod
+      Description: Prod Stage
+      DeploymentId: !Ref Deployment
+      ApiId: !Ref UIWebSocketApi
+  VisiblityUIEventsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${AWS::StackName}-VisiblityUIEventsTopic'
+  WebAppS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "cr-ui-web-app-s3-bucket"
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+  # # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
+  WebAppS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebAppS3Bucket
+      PolicyDocument:
+        Version: '2012-10-17' # IMPORTANT ---> See this is now quoted
+        Statement:
+          - Sid: AllowPublicReadAccess
+            Effect: Allow
+            Principal: '*'
+            Resource: !Sub 'arn:aws:s3:::cr-ui-web-app-s3-bucket/*'
+            Action:
+              - 's3:GetObject'
+
 ##########################################################################
 #   Outputs
 ##########################################################################
@@ -467,3 +722,66 @@ Outputs:
   TwimlAPI:
     Description: "URL to use to configure Voice Handler for Twilio Phone Number (returns TwiML!)"
     Value: !Sub "https://${TwimlAPI}.execute-api.${AWS::Region}.amazonaws.com/call-setup-restaurant-ordering"      
+  GetCallsAPI:
+    Description: "API for getCalls"
+    Value: !Sub "https://${GetCallsAPI}.execute-api.${AWS::Region}.amazonaws.com/"
+  WebAppS3BucketName:
+    Value: !Ref WebAppS3Bucket
+  S3BucketSecureURL:
+    Value:
+      !Join [
+        "",
+        [
+          "https://",
+          !Ref WebAppS3Bucket,
+          ".s3.",
+          !Ref "AWS::Region",
+          ".amazonaws.com/index.html",
+        ],
+      ]
+    Description: Name of S3 bucket to hold website content
+  UIOnConnectLambdaFunctionArn:
+    Description: "OnConnect function ARN"
+    Value: !GetAtt UIOnConnectLambdaFunction.Arn
+  UIOnDisconnectLambdaFunctionArn:
+    Description: "OnDisconnect function ARN"
+    Value: !GetAtt UIOnDisconnectLambdaFunction.Arn
+  UIDefaultWSLambdaFunctionArn:
+    Description: "Post function ARN"
+    Value: !GetAtt UIDefaultWSLambdaFunction.Arn
+  UIWebSocketApi:
+    Description: "ARN to the Web Socket API Gateway"
+    Value: !Ref UIWebSocketApi
+    Export:
+      Name: "UIWebSocketApi"
+  UIWebsocketURL:
+    Description: "The WSS Protocol URL to connect to"
+    Value:
+      !Join [
+        "",
+        [
+          "wss://",
+          !Ref UIWebSocketApi,
+          ".execute-api.",
+          !Ref "AWS::Region",
+          ".amazonaws.com/",
+          !Ref "Stage",
+        ],
+      ]
+    Export:
+      Name: "UIWebsocketURL"
+  UIWebsocketEndpoint:
+    Description: "Endpoint for Websocket"
+    Value:
+      !Join [
+        "",
+        [
+          !Ref UIWebSocketApi,
+          ".execute-api.",
+          !Ref "AWS::Region",
+          ".amazonaws.com/",
+          !Ref "Stage",
+        ],
+      ]
+    Export:
+      Name: "UIWebsocketEndpoint"

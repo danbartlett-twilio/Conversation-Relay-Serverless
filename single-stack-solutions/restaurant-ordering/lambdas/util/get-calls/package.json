@@ -1,0 +1,17 @@
+{
+    "name": "get-calls",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.mjs",
+    "repository": "",
+    "author": "",
+    "license": "MIT",
+    "dependencies": {   
+      "aws-sdk": "2.1691.0" 
+    },
+    "scripts": {
+    },
+    "devDependencies": {
+    }
+  }
+  

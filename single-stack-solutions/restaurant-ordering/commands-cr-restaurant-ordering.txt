@@ -1,4 +1,9 @@
 ====================================================
 DEPLOY TEMPLATE
 ====================================================
-sam deploy --stack-name CR-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+cd restaurant-ordering
+sam build
+sam deploy --resolve-s3 --stack-name CR-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+cd visibility-app
+npm run build
+node scripts/deploy.js
