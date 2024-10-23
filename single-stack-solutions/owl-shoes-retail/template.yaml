@@ -6,6 +6,9 @@ Globals:
   Function:
     Timeout: 5
     Runtime: nodejs20.x
+    Layers:
+      - !Sub "arn:aws:lambda:us-east-1:580247275435:layer:LambdaInsightsExtension-Arm64:20"
+      # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Lambda-Insights-Getting-Started-SAM-CLI.html
 
 Resources:
   PrimaryDynamoDBTable:
