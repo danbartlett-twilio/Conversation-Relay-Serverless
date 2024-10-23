@@ -1,0 +1,10 @@
+{
+    "pk": "+19495555555",
+    "sk": "profile",
+    "email": "email@twilio.com",
+    "firstName": "Dan",
+    "lastName": "Bartlett",
+    "pk1": "profile",
+    "sk1": "+19495555555",
+    "useCase": "restaurantOrderingUseCase"
+   }

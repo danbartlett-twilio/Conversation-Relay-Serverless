@@ -1,0 +1,4 @@
+====================================================
+DEPLOY TEMPLATE
+====================================================
+sam deploy --stack-name CR-OWL-SHOES --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
