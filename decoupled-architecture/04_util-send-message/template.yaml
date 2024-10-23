@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Enable API calls to Twilio to send Messages (SMS, WhatsApp)
+
+Parameters:  
+  ConversationRelayTwilioClientLayerVersion:
+    Type: String
+    Default: '1'    
+
+Resources:
+  ##########################################################################
+  #  SNS Topic                 
+  #
+  #  All calls to Twilio API calls (success or fail) are sent to this topic 
+  #  for futher downstream processing.
+  ##########################################################################
+  TwilioSendMessageTopic:
+    Type: AWS::SNS::Topic
+
+  ##########################################################################
+  #  (TwilioSendMessageFunction) Lambda Function                            
+  ##########################################################################
+  TwilioSendMessageFunction:    
+    Type: AWS::Serverless::Function
+    Properties:      
+      FunctionName: TwilioSendMessageFunction
+      Description: Generic Send Message (SMS/WhatsApp) available to all tools
+      CodeUri: lambdas/twilio-send-message/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x      
+      Architectures:
+        - arm64   
+      Timeout: 5
+      MemorySize: 128
+      Layers:
+        -
+          !Sub 
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelayTwilioClientLayer:${cv}'
+          - cv : !Ref 'ConversationRelayTwilioClientLayerVersion'
+      Environment:
+        Variables:          
+          # DO NOT STORE VALUES LIKE THIS IN CODE!...
+          # TWILIO_ACCOUNT_SID: "YOUR-TWILIO-ACCOUNT-SID"
+          # TWILIO_AUTH_TOKEN: "YOUR-TWILIO-AUTH-TOKEN"
+          # Use a secure method for production such as 
+          # pulling from the AWS Parameter Store or Secrets Manager.
+          # Use AWS Secrets Manager (or similar) to store these
+          TWILIO_ACCOUNT_SID: '{{resolve:secretsmanager:CR_APP:SecretString:TWILIO_ACCOUNT_SID}}'
+          TWILIO_AUTH_TOKEN: '{{resolve:secretsmanager:CR_APP:SecretString:TWILIO_AUTH_TOKEN}}'
+          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:            
+            Topic: !Ref TwilioSendMessageTopic          
+
+
+##########################################################################
+#   Outputs
+##########################################################################
+Outputs:
+  
+  TwilioSendMessageTopic:
+    Description: SNS topic that is called to send a message via Twilio
+    Value: !GetAtt TwilioSendMessageTopic.TopicName
+    Export:
+      Name: 'TwilioSendMessageTopic'
+  TwilioSendMessageTopicARN:
+    Description: ARN to SNS SNS topic that is called to send a message via Twilio
+    Value: !Ref TwilioSendMessageTopic    
+    Export:
+      Name: 'TwilioSendMessageTopicARN' 

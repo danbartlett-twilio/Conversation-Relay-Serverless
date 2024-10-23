@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Restaurant Ordering Use Case Stack
+
+Parameters:
+  ConversationRelaySaveToolCallResultLayerVersion:
+    Type: String
+    Default: '1'  
+
+Resources:
+
+  ##########################################################################
+  #  (PlaceOrderFunction) Lambda Function                            
+  ##########################################################################
+  PlaceOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:      
+      FunctionName: PlaceOrderFunction
+      Description: Saves an order for the restaurant.
+      CodeUri: lambdas/place-order-function/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x      
+      Architectures:
+        - arm64      
+      Timeout: 5
+      MemorySize: 128
+      Layers: 
+        -
+          !Sub 
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelaySaveToolCallResultLayer:${cv}'
+          - cv : !Ref 'ConversationRelaySaveToolCallResultLayerVersion'        
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName
+      Policies:        
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue  CRPrimaryDynamoTableName                                     
+
+  ##########################################################################
+  #  (SendRestaurantSmsFunction) Lambda Function                            
+  ##########################################################################
+  SendRestaurantSmsFunction:
+    Type: AWS::Serverless::Function
+    Properties:      
+      FunctionName: SendRestaurantSmsFunction
+      Description: Sends a message (SMS, WhatsApp) for the restaurant use case. 
+      CodeUri: lambdas/send-restaurant-sms-function/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x      
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Policies:        
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue  CRPrimaryDynamoTableName
+        - SNSPublishMessagePolicy:
+            TopicName: !ImportValue TwilioSendMessageTopic     
+      Layers:
+        -
+          !Sub 
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelaySaveToolCallResultLayer:${cv}'
+          - cv : !Ref 'ConversationRelaySaveToolCallResultLayerVersion'                   
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName
+          TWILIO_SEND_MESSAGE_TOPIC_ARN: !ImportValue TwilioSendMessageTopicARN                 
+
+  ##########################################################################
+  #  (SendRestaurantEmailFunction) Lambda Function                            
+  ##########################################################################
+  SendRestaurantEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:      
+      FunctionName: SendRestaurantEmailFunction
+      Description: Sends an email for the restaurant use case. 
+      CodeUri: lambdas/send-restaurant-email-function/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x      
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Policies:        
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue  CRPrimaryDynamoTableName
+        - SNSPublishMessagePolicy:
+            TopicName: !ImportValue TwilioSendEmailTopic     
+      Layers:
+        -
+          !Sub 
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelaySaveToolCallResultLayer:${cv}'
+          - cv : !Ref 'ConversationRelaySaveToolCallResultLayerVersion'                   
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName
+          TWILIO_SEND_EMAIL_TOPIC_ARN: !ImportValue TwilioSendEmailTopicARN
+
+  ##########################################################################
+  #  (CheckRestaurantPickupTime) Lambda Function                            
+  ##########################################################################
+  CheckRestaurantPickupTime:
+    Type: AWS::Serverless::Function
+    Properties:      
+      FunctionName: CheckRestaurantPickupTime
+      Description: Checks to see when an order can be ready for pickup
+      CodeUri: lambdas/return-pickup-time-function/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x      
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Policies:        
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue  CRPrimaryDynamoTableName    
+      Layers:
+        -
+          !Sub 
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelaySaveToolCallResultLayer:${cv}'
+          - cv : !Ref 'ConversationRelaySaveToolCallResultLayerVersion'                   
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName
+
+  ##########################################################################
+  #  (CheckRestaurantDeliveryTime) Lambda Function                            
+  ##########################################################################
+  CheckRestaurantDeliveryTime:
+    Type: AWS::Serverless::Function
+    Properties:      
+      FunctionName: CheckRestaurantDeliveryTime
+      Description: Checks to see when an order will be delivered.
+      CodeUri: lambdas/return-delivery-time-function/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x      
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Policies:        
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue  CRPrimaryDynamoTableName    
+      Layers:
+        -
+          !Sub 
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelaySaveToolCallResultLayer:${cv}'
+          - cv : !Ref 'ConversationRelaySaveToolCallResultLayerVersion'                   
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue  CRPrimaryDynamoTableName
+

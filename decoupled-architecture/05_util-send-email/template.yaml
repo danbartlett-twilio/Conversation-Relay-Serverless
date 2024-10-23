@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Enable API calls to Twilio to send Messages (SMS, WhatsApp)
+
+Parameters:  
+  ConversationRelayTwilioSendGridEmailLayerVersion:
+    Type: String
+    Default: '1'    
+
+Resources:
+  ##########################################################################
+  #  Email Topic                 
+  #
+  #  All calls to Twilio API calls (success or fail) are sent to this topic 
+  #  for futher downstream processing.
+  ##########################################################################
+  TwilioSendEmailTopic:
+    Type: AWS::SNS::Topic
+
+  ##########################################################################
+  #  (TwilioSendEmailFunction) Lambda Function                            
+  ##########################################################################
+  TwilioSendEmailFunction:    
+    Type: AWS::Serverless::Function
+    Properties:      
+      FunctionName: TwilioSendEmailFunction
+      Description: Generic Send Email available to all tools
+      CodeUri: lambdas/twilio-send-email/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x      
+      Architectures:
+        - arm64   
+      Timeout: 5
+      MemorySize: 128
+      Layers:
+        -
+          !Sub 
+          - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:ConversationRelayTwilioSendGridEmailLayer:${cv}'
+          - cv : !Ref 'ConversationRelayTwilioSendGridEmailLayerVersion'
+      Environment:
+        Variables:          
+          # Use AWS Secrets Manager to save these
+          # SENDGRID_API_KEY: "YOUR-TWILIO-SENDGRID_API_KEY"          
+          # TWILIO_EMAIL_FROM_ADDRESS: "some-from-email@some-domain.com"          
+          # DO NOT STORE VALUES LIKE THIS IN CODE!...
+          # Use a secure method for production such as 
+          # pulling from the AWS Parameter Store or Secrets Manager.
+          # Use AWS Secrets Manager (or similar) to store these
+          SENDGRID_API_KEY: '{{resolve:secretsmanager:CR_APP:SecretString:SENDGRID_API_KEY}}'          
+          TWILIO_EMAIL_FROM_ADDRESS: '{{resolve:secretsmanager:CR_APP:SecretString:TWILIO_EMAIL_FROM_ADDRESS}}'
+          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html                   
+
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:            
+            Topic: !Ref TwilioSendEmailTopic          
+
+
+##########################################################################
+#   Outputs
+##########################################################################
+Outputs:
+  
+  TwilioSendEmailTopic:
+    Description: SNS topic that is called to send an email via Twilio
+    Value: !GetAtt TwilioSendEmailTopic.TopicName
+    Export:
+      Name: 'TwilioSendEmailTopic'
+  TwilioSendEmailTopicARN:
+    Description: ARN to SNS topic that is called to send an email via Twilio
+    Value: !Ref TwilioSendEmailTopic    
+    Export:
+      Name: 'TwilioSendEmailTopicARN'

@@ -1,4 +1,0 @@
-====================================================
-DEPLOY TEMPLATE
-====================================================
-sam deploy --stack-name CONVERSATION-RELAY-TWIML-API --template template.yaml --profile $(cat ../aws-profile.profile)

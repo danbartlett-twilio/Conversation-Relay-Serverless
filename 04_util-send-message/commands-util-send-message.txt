@@ -1,4 +1,0 @@
-====================================================
-DEPLOY TEMPLATE
-====================================================
-sam deploy --stack-name UTIL-SEND-MESSAGE --template template.yaml --profile $(cat ../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
