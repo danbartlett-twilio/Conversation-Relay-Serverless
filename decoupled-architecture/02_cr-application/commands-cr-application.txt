@@ -1,9 +1,22 @@
 ====================================================
-BEFORE FIRST DEPLOY (install nodejs libraries)
+BEFORE FIRST DEPLOY
 ====================================================
+1) => Install node libraries
 npm --prefix ./layers/layer-cr-open-ai-client/nodejs install
 npm --prefix ./layers/layer-cr-open-sendgrid-email-client/nodejs install
 npm --prefix ./layers/layer-cr-twilio-client/nodejs install
+
+2) => Save Secrets to AWS SecretsManager
+
+Use AWS Secrets Manager and create a secret for this stack. The secret MUST BE NAMED CR_APP and have the following SecretStrings:
+
+OPENAI_API_KEY
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+SENDGRID_API_KEY
+TWILIO_EMAIL_FROM_ADDRESS
+
+The first SecretString is required to access the LLM. The next two are required to send SMS messages and the final two are needed to send emails. If you do not want to send SMS or email, just put in fake data for those strings.
 
 ====================================================
 DEPLOY TEMPLATE
