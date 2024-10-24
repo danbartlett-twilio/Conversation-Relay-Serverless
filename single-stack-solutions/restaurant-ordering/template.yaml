@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Single stack to build a Restaurant Ordering Voice AI application leveraging Twilio ConversationRelay.
 
@@ -15,36 +15,27 @@ Resources:
         AttributeName: expireAt
         Enabled: true
       TableName: !Sub "${AWS::StackName}-ConversationRelayAppDatabase"
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
-        -
-          AttributeName: "pk"
+        - AttributeName: "pk"
           AttributeType: "S"
-        -
-          AttributeName: "sk"
+        - AttributeName: "sk"
           AttributeType: "S"
-        -
-          AttributeName: "pk1"
+        - AttributeName: "pk1"
           AttributeType: "S"
-        -
-          AttributeName: "sk1"
+        - AttributeName: "sk1"
           AttributeType: "S"
       KeySchema:
-        -
-          AttributeName: "pk"
+        - AttributeName: "pk"
           KeyType: "HASH"
-        -
-          AttributeName: "sk"
+        - AttributeName: "sk"
           KeyType: "RANGE"
       GlobalSecondaryIndexes:
-        -
-          IndexName: "index-1-full"
+        - IndexName: "index-1-full"
           KeySchema:
-            -
-              AttributeName: "pk1"
+            - AttributeName: "pk1"
               KeyType: "HASH"
-            -
-              AttributeName: "sk1"
+            - AttributeName: "sk1"
               KeyType: "RANGE"
           Projection:
             ProjectionType: "ALL"
@@ -62,7 +53,7 @@ Resources:
       ContentUri: layers/layer-cr-dynamodb-util/
       CompatibleRuntimes:
         - nodejs20.x
-      LicenseInfo: 'MIT'
+      LicenseInfo: "MIT"
       RetentionPolicy: Retain
 
   ###############################################################
@@ -77,13 +68,13 @@ Resources:
       ContentUri: layers/layer-cr-open-ai-client/
       CompatibleRuntimes:
         - nodejs20.x
-      LicenseInfo: 'MIT'
+      LicenseInfo: "MIT"
       RetentionPolicy: Retain
 
   ##########################################################################
   #  Shared Lambda Layers
   #
-  #  
+  #
   ##########################################################################
   ConversationRelayTwilioClientLayer:
     Type: AWS::Serverless::LayerVersion
@@ -93,7 +84,7 @@ Resources:
       ContentUri: layers/layer-cr-twilio-client/
       CompatibleRuntimes:
         - nodejs20.x
-      LicenseInfo: 'MIT'
+      LicenseInfo: "MIT"
       RetentionPolicy: Retain
 
   ConversationRelayTwilioSendGridEmailLayer:
@@ -104,7 +95,7 @@ Resources:
       ContentUri: layers/layer-cr-sendgrid-email-client/
       CompatibleRuntimes:
         - nodejs20.x
-      LicenseInfo: 'MIT'
+      LicenseInfo: "MIT"
       RetentionPolicy: Retain
 
   ConversationRelaySaveToolCallResultLayer:
@@ -115,148 +106,147 @@ Resources:
       ContentUri: layers/layer-save-tool-result/
       CompatibleRuntimes:
         - nodejs20.x
-      LicenseInfo: 'MIT'
+      LicenseInfo: "MIT"
       RetentionPolicy: Retain
 
   ##########################################################################
-  #  SNS Topic for SNS               
+  #  SNS Topic for SNS
   #
-  #  All calls to Twilio API calls (success or fail) are sent to this topic 
+  #  All calls to Twilio API calls (success or fail) are sent to this topic
   #  for futher downstream processing.
   ##########################################################################
   TwilioSendMessageTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub '${AWS::StackName}-TwilioSendMessageTopic'
+      TopicName: !Sub "${AWS::StackName}-TwilioSendMessageTopic"
 
   ##########################################################################
-  #  (TwilioSendMessageFunction) Lambda Function                            
+  #  (TwilioSendMessageFunction) Lambda Function
   ##########################################################################
-  TwilioSendMessageFunction:    
+  TwilioSendMessageFunction:
     Type: AWS::Serverless::Function
-    Properties:      
-      FunctionName: !Sub '${AWS::StackName}-TwilioSendMessageFunction'
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-TwilioSendMessageFunction"
       Description: Generic Send Message (SMS/WhatsApp) available to all tools
       CodeUri: lambdas/util/twilio-send-message/
       AutoPublishAlias: live
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x      
+      Runtime: nodejs20.x
       Architectures:
-        - arm64   
+        - arm64
       Timeout: 5
       MemorySize: 128
-      Layers: 
+      Layers:
         - !Ref ConversationRelayTwilioClientLayer
       Environment:
-        Variables:          
+        Variables:
           # DO NOT STORE VALUES LIKE THIS IN CODE!...
           # TWILIO_ACCOUNT_SID: "YOUR-TWILIO-ACCOUNT-SID"
           # TWILIO_AUTH_TOKEN: "YOUR-TWILIO-AUTH-TOKEN"
-          # Use a secure method for production such as 
+          # Use a secure method for production such as
           # pulling from the AWS Parameter Store or Secrets Manager.
           # Use AWS Secrets Manager (or similar) to store these
-          TWILIO_ACCOUNT_SID: '{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}'
-          TWILIO_AUTH_TOKEN: '{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_AUTH_TOKEN}}'
+          TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
+          TWILIO_AUTH_TOKEN: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_AUTH_TOKEN}}"
           # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html
       Events:
         SNSEvent:
           Type: SNS
-          Properties:            
-            Topic: !Ref TwilioSendMessageTopic   
+          Properties:
+            Topic: !Ref TwilioSendMessageTopic
 
   ##########################################################################
-  #  SNS Topic for Email                 
+  #  SNS Topic for Email
   #
-  #  All calls to Twilio API calls (success or fail) are sent to this topic 
+  #  All calls to Twilio API calls (success or fail) are sent to this topic
   #  for futher downstream processing.
   ##########################################################################
   TwilioSendEmailTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub '${AWS::StackName}-TwilioSendEmailTopic'    
+      TopicName: !Sub "${AWS::StackName}-TwilioSendEmailTopic"
 
   ##########################################################################
-  #  (TwilioSendEmailFunction) Lambda Function                            
+  #  (TwilioSendEmailFunction) Lambda Function
   ##########################################################################
-  TwilioSendEmailFunction:    
+  TwilioSendEmailFunction:
     Type: AWS::Serverless::Function
-    Properties:      
-      FunctionName: !Sub '${AWS::StackName}-TwilioSendEmailFunction'
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-TwilioSendEmailFunction"
       Description: Generic Send Email available for this stack.
       CodeUri: lambdas/util/twilio-send-email/
       AutoPublishAlias: live
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x      
+      Runtime: nodejs20.x
       Architectures:
-        - arm64   
+        - arm64
       Timeout: 5
       MemorySize: 128
       Layers:
         - !Ref ConversationRelayTwilioSendGridEmailLayer
       Environment:
-        Variables:          
+        Variables:
           # Use AWS Secrets Manager to save these
-          # SENDGRID_API_KEY: "YOUR-TWILIO-SENDGRID_API_KEY"          
-          # TWILIO_EMAIL_FROM_ADDRESS: "some-from-email@some-domain.com"          
+          # SENDGRID_API_KEY: "YOUR-TWILIO-SENDGRID_API_KEY"
+          # TWILIO_EMAIL_FROM_ADDRESS: "some-from-email@some-domain.com"
           # DO NOT STORE VALUES LIKE THIS IN CODE!...
-          # Use a secure method for production such as 
+          # Use a secure method for production such as
           # pulling from the AWS Parameter Store or Secrets Manager.
           # Use AWS Secrets Manager (or similar) to store these
-          SENDGRID_API_KEY: '{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:SENDGRID_API_KEY}}'          
-          TWILIO_EMAIL_FROM_ADDRESS: '{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_EMAIL_FROM_ADDRESS}}'
-          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html                   
+          SENDGRID_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:SENDGRID_API_KEY}}"
+          TWILIO_EMAIL_FROM_ADDRESS: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_EMAIL_FROM_ADDRESS}}"
+          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html
       Events:
         SNSEvent:
           Type: SNS
-          Properties:            
+          Properties:
             Topic: !Ref TwilioSendEmailTopic
 
-# Websocket API
+  # Websocket API
   CRWebSocketApi:
-    Type: 'AWS::ApiGatewayV2::Api'
+    Type: "AWS::ApiGatewayV2::Api"
     Properties:
       Name: !Sub "${AWS::StackName}-CRWebSocketApi"
       Description: Websocket API between Twilio and AI application
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
 
-# OnConnectLambda
+  # OnConnectLambda
   OnConnectLambdaFunction:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
-      FunctionName: !Sub '${AWS::StackName}-onconnect-function'
+      FunctionName: !Sub "${AWS::StackName}-onconnect-function"
       Description: Lambda to handle connection to websocket api
       CodeUri: lambdas/websocket/onconnect/
       Handler: app.lambdaHandler
       AutoPublishAlias: live
       Runtime: nodejs20.x
       Architectures:
-        - arm64      
+        - arm64
       MemorySize: 128
       Environment:
-        Variables:          
-          TABLE_NAME: !Ref PrimaryDynamoDBTable 
+        Variables:
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref PrimaryDynamoDBTable 
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PrimaryDynamoDBTable
 
   # Function permissions grant an AWS service or another account permission to use a function
   OnConnectFunctionResourcePermission:
-    Type: 'AWS::Lambda::Permission'
+    Type: "AWS::Lambda::Permission"
     Properties:
-      Action: 'lambda:InvokeFunction'
+      Action: "lambda:InvokeFunction"
       Principal: apigateway.amazonaws.com
       FunctionName: !Ref OnConnectLambdaFunction
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*"
   OnConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref CRWebSocketApi
       Description: OnConnect Integration
       IntegrationType: AWS_PROXY
-      IntegrationUri: 
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectLambdaFunction.Arn}/invocations
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectLambdaFunction.Arn}/invocations
   OnConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -265,76 +255,75 @@ Resources:
       AuthorizationType: NONE
       OperationName: OnConnectRoute
       Target: !Join
-        - '/'
-        - - 'integrations'
+        - "/"
+        - - "integrations"
           - !Ref OnConnectIntegration
 
-# Default Lambda
+  # Default Lambda
   DefaultWSLambdaFunction:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
-      FunctionName: !Sub '${AWS::StackName}-default-function' 
+      FunctionName: !Sub "${AWS::StackName}-default-function"
       Description: Lambda to handle posts coming into websocket api
       CodeUri: lambdas/websocket/default/
       Handler: app.lambdaHandler
       AutoPublishAlias: live
       Runtime: nodejs20.x
       Architectures:
-        - arm64     
-      MemorySize: 1024  
-      Timeout: 30    
+        - arm64
+      MemorySize: 1024
+      Timeout: 30
       Environment:
-        Variables:          
+        Variables:
           TABLE_NAME: !Ref PrimaryDynamoDBTable
           # DO NOT STORE VALUES LIKE THIS IN CODE!...
-          # OPENAI_API_KEY: "YOUR-OPENAI-API-KEY"          
-          # Use a secure method for production such as 
+          # OPENAI_API_KEY: "YOUR-OPENAI-API-KEY"
+          # Use a secure method for production such as
           # pulling from the AWS Parameter Store or Secrets Manager.
           # Use AWS Secrets Manager (or similar) to store these
-          OPENAI_API_KEY: '{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:OPENAI_API_KEY}}'          
+          OPENAI_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:OPENAI_API_KEY}}"
           # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html
           AWS_ACCOUNT_ID: !Ref AWS::AccountId
           TWILIO_SEND_MESSAGE_TOPIC_ARN: !Ref TwilioSendMessageTopic
           TWILIO_SEND_EMAIL_TOPIC_ARN: !Ref TwilioSendEmailTopic
       Layers:
         - !Ref ConversationRelayOpenAIClientLayer
-        - !Ref ConversationRelaySaveToolCallResultLayer        
+        - !Ref ConversationRelaySaveToolCallResultLayer
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PrimaryDynamoDBTable
         - Statement:
-          - Effect: Allow
-            Action:
-            - 'execute-api:ManageConnections'
-            Resource:
-            - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
-          - Effect: Allow
-            Action:
-            - 'sns:Publish'
-            Resource:
-            - !Ref TwilioSendMessageTopic
-          - Effect: Allow
-            Action:
-            - 'sns:Publish'
-            Resource:
-            - !Ref TwilioSendEmailTopic                      
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*"
+            - Effect: Allow
+              Action:
+                - "sns:Publish"
+              Resource:
+                - !Ref TwilioSendMessageTopic
+            - Effect: Allow
+              Action:
+                - "sns:Publish"
+              Resource:
+                - !Ref TwilioSendEmailTopic
   # Function permissions grant an AWS service or another account permission to use a function
   DefaultWSFunctionResourcePermission:
-    Type: 'AWS::Lambda::Permission'
+    Type: "AWS::Lambda::Permission"
     Properties:
-      Action: 'lambda:InvokeFunction'
+      Action: "lambda:InvokeFunction"
       Principal: apigateway.amazonaws.com
       FunctionName: !Ref DefaultWSLambdaFunction
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*"
   DefaultWSIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref CRWebSocketApi
       Description: Default WS Route Integration
       IntegrationType: AWS_PROXY
-      IntegrationUri: 
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultWSLambdaFunction.Arn}/invocations
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DefaultWSLambdaFunction.Arn}/invocations
   DefaultWSRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -343,39 +332,38 @@ Resources:
       AuthorizationType: NONE
       OperationName: DefaultRoute
       Target: !Join
-        - '/'
-        - - 'integrations'
+        - "/"
+        - - "integrations"
           - !Ref DefaultWSIntegration
 
   OnDisconnectLambdaFunction:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
-      FunctionName: !Sub '${AWS::StackName}-ondisconnect-function'
+      FunctionName: !Sub "${AWS::StackName}-ondisconnect-function"
       Description: Lambda to handle closed websocket connection
       CodeUri: lambdas/websocket/disconnect/
       Handler: app.lambdaHandler
       AutoPublishAlias: live
       Runtime: nodejs20.x
       Architectures:
-        - arm64     
+        - arm64
       MemorySize: 128
 
   OnDisconnectFunctionResourcePermission:
-    Type: 'AWS::Lambda::Permission'
+    Type: "AWS::Lambda::Permission"
     Properties:
-      Action: 'lambda:InvokeFunction'
+      Action: "lambda:InvokeFunction"
       Principal: apigateway.amazonaws.com
       FunctionName: !Ref OnDisconnectLambdaFunction
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*"
   OnDisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref CRWebSocketApi
       Description: OnDisconnect Integration
       IntegrationType: AWS_PROXY
-      IntegrationUri: 
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectLambdaFunction.Arn}/invocations
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectLambdaFunction.Arn}/invocations
   OnDisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -384,10 +372,10 @@ Resources:
       AuthorizationType: NONE
       OperationName: OnDisconnectRoute
       Target: !Join
-        - '/'
-        - - 'integrations'
+        - "/"
+        - - "integrations"
           - !Ref OnDisconnectIntegration
-        
+
   Deployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
@@ -406,17 +394,16 @@ Resources:
 
   WSManageConnectionsPolicy:
     Type: AWS::IAM::ManagedPolicy
-    Properties:       
-      ManagedPolicyName:        
-        !Sub '${AWS::StackName}-WSManageConnectionsPolicy'          
+    Properties:
+      ManagedPolicyName: !Sub "${AWS::StackName}-WSManageConnectionsPolicy"
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+          - Effect: Allow
+            Action:
+              - "execute-api:ManageConnections"
+            Resource:
+              - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*"
 
   TwimlAPI:
     Type: AWS::Serverless::HttpApi
@@ -431,8 +418,20 @@ Resources:
         AllowHeaders:
           - "*"
 
+  RegisterVoiceClientAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: Rest API used to handle updates to react client
+      CorsConfiguration:
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+
   ######################################################
-  # CallSetupFunction => 
+  # CallSetupFunction =>
   ######################################################
   CallSetupFunction:
     Type: AWS::Serverless::Function
@@ -447,10 +446,21 @@ Resources:
         - arm64
       Environment:
         Variables:
-          STACK_USE_CASE: 'restaurantOrderingUseCase'
-          WS_URL: !Join [ '', [ 'wss://', !Ref CRWebSocketApi, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
+          STACK_USE_CASE: "restaurantOrderingUseCase"
+          WS_URL:
+            !Join [
+              "",
+              [
+                "wss://",
+                !Ref CRWebSocketApi,
+                ".execute-api.",
+                !Ref "AWS::Region",
+                ".amazonaws.com/",
+                !Ref "Stage",
+              ],
+            ]
           TABLE_NAME: !Ref PrimaryDynamoDBTable
-      Policies:        
+      Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PrimaryDynamoDBTable
       Events:
@@ -460,7 +470,41 @@ Resources:
             Path: /call-setup-restaurant-ordering
             Method: post
             ApiId: !Ref TwimlAPI
-  
+
+  ######################################################
+  # RegisterVoiceClientFunction
+  ######################################################
+  RegisterVoiceClientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: "Handles voice client for react tester"
+      CodeUri: lambdas/register-voice-client/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      Tags:
+        API: "Lookup"
+        Method: "Get"
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
+          TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
+          TWILIO_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_KEY}}"
+          TWILIO_API_SECRET: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_SECRET}}"
+          TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWIML_APP_SID}}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue CRPrimaryDynamoTableName
+      Events:
+        RegisterVoiceClientEvent:
+          Type: HttpApi
+          Properties:
+            Path: /register-voice-client
+            Method: ANY
+            ApiId: !Ref RegisterVoiceClientAPI
+
   GetCallsAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -489,21 +533,21 @@ Resources:
         Method: "Get"
       Environment:
         Variables:
-          TABLE_NAME: !Ref PrimaryDynamoDBTable 
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref PrimaryDynamoDBTable
-        # - Statement:
-        #   - Effect: Allow
-        #     Action:
-        #     - 'execute-api:ManageConnections'
-        #     Resource:
-        #     - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
-        #   - Effect: Allow
-        #     Action:
-        #     - 'sns:Publish'
-        #     Resource:
-        #     - !Ref TwilioSendMessageTopic
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PrimaryDynamoDBTable
+          # - Statement:
+          #   - Effect: Allow
+          #     Action:
+          #     - 'execute-api:ManageConnections'
+          #     Resource:
+          #     - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*'
+          #   - Effect: Allow
+          #     Action:
+          #     - 'sns:Publish'
+          #     Resource:
+          #     - !Ref TwilioSendMessageTopic
       Events:
         GetCallsGetEvent:
           Type: HttpApi
@@ -544,10 +588,10 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          TABLE_NAME: !Ref PrimaryDynamoDBTable 
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref PrimaryDynamoDBTable 
+            TableName: !Ref PrimaryDynamoDBTable
 
   # Function permissions grant an AWS service or another account permission to use a function
   UIOnConnectFunctionResourcePermission:
@@ -592,11 +636,11 @@ Resources:
       MemorySize: 1024
       Environment:
         Variables:
-          TABLE_NAME: !Ref PrimaryDynamoDBTable 
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
           AWS_ACCOUNT_ID: !Ref AWS::AccountId
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref PrimaryDynamoDBTable 
+            TableName: !Ref PrimaryDynamoDBTable
         - Statement:
             - Effect: Allow
               Action:
@@ -689,7 +733,7 @@ Resources:
   VisiblityUIEventsTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub '${AWS::StackName}-VisiblityUIEventsTopic'
+      TopicName: !Sub "${AWS::StackName}-VisiblityUIEventsTopic"
   WebAppS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -708,14 +752,14 @@ Resources:
     Properties:
       Bucket: !Ref WebAppS3Bucket
       PolicyDocument:
-        Version: '2012-10-17' # IMPORTANT ---> See this is now quoted
+        Version: "2012-10-17" # IMPORTANT ---> See this is now quoted
         Statement:
           - Sid: AllowPublicReadAccess
             Effect: Allow
-            Principal: '*'
-            Resource: !Sub 'arn:aws:s3:::cr-ui-web-app-s3-bucket/*'
+            Principal: "*"
+            Resource: !Sub "arn:aws:s3:::cr-ui-web-app-s3-bucket/*"
             Action:
-              - 's3:GetObject'
+              - "s3:GetObject"
 
 ##########################################################################
 #   Outputs
@@ -723,7 +767,10 @@ Resources:
 Outputs:
   TwimlAPI:
     Description: "URL to use to configure Voice Handler for Twilio Phone Number (returns TwiML!)"
-    Value: !Sub "https://${TwimlAPI}.execute-api.${AWS::Region}.amazonaws.com/call-setup-restaurant-ordering"      
+    Value: !Sub "https://${TwimlAPI}.execute-api.${AWS::Region}.amazonaws.com/call-setup-restaurant-ordering"
+  RegisterVoiceClientAPI:
+    Description: "API for registering voice client"
+    Value: !Sub "https://${RegisterVoiceClientAPI}.execute-api.${AWS::Region}.amazonaws.com/register-voice-client"
   GetCallsAPI:
     Description: "API for getCalls"
     Value: !Sub "https://${GetCallsAPI}.execute-api.${AWS::Region}.amazonaws.com/"
