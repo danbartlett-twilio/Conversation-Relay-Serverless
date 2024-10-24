@@ -18,7 +18,7 @@ export const lambdaHandler = async (event, context) => {
       '#Called': 'Called' 
     },
     ExpressionAttributeValues: {
-      ':skVal': 'finalConnection'
+      ':skVal': 'connection'
     },
     ProjectionExpression: "Caller, #Called, CallSid, expireAt"
   };

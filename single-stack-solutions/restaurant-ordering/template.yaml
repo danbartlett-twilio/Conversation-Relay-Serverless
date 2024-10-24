@@ -421,7 +421,6 @@ Resources:
   TwimlAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
-      Name: !Sub "${AWS::StackName}-TwimlAPI"
       Description: Rest API used to handle inbound requests from Twilio.
       CorsConfiguration:
         AllowMethods:
@@ -464,7 +463,6 @@ Resources:
   GetCallsAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
-      Name: !Sub "${AWS::StackName}-GetCallsAPI"
       Description: Rest API used to lookup current and past calls.
       CorsConfiguration:
         AllowMethods:
@@ -524,7 +522,7 @@ Resources:
   UIWebSocketApi:
     Type: "AWS::ApiGatewayV2::Api"
     Properties:
-      Name: !Sub "${AWS::StackName}-UIWebSocketApi"
+      Name: UIWebSocketApi
       Description: Websocket API between Backend and UI
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
@@ -561,7 +559,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref UIWebSocketApi
-      Description: UIOnConnect Integration
+      Description: OnConnect Integration
       IntegrationType: AWS_PROXY
       IntegrationUri:
         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIOnConnectLambdaFunction.Arn}/invocations
@@ -571,7 +569,7 @@ Resources:
       ApiId: !Ref UIWebSocketApi
       RouteKey: $connect
       AuthorizationType: NONE
-      OperationName: UIOnConnectRoute
+      OperationName: OnConnectRoute
       Target: !Join
         - "/"
         - - "integrations"
@@ -625,66 +623,66 @@ Resources:
       ApiId: !Ref UIWebSocketApi
       RouteKey: $default
       AuthorizationType: NONE
-      OperationName: UIDefaultRoute
+      OperationName: DefaultRoute
       Target: !Join
         - "/"
         - - "integrations"
           - !Ref UIDefaultWSIntegration
 
-  # UIOnDisconnectLambdaFunction:
-  #   Type: "AWS::Serverless::Function"
-  #   Properties:
-  #     FunctionName: !Sub "${AWS::StackName}-ui-ondisconnect-function"
-  #     Description: Lambda to handle closed websocket connection
-  #     CodeUri: lambdas/websocket/ui-disconnect/
-  #     Handler: app.lambdaHandler
-  #     AutoPublishAlias: live
-  #     Runtime: nodejs20.x
-  #     Architectures:
-  #       - arm64
-  #     MemorySize: 128
+  UIOnDisconnectLambdaFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-ui-ondisconnect-function"
+      Description: Lambda to handle closed websocket connection
+      CodeUri: lambdas/websocket/ui-disconnect/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      MemorySize: 128
 
-  # UIOnDisconnectFunctionResourcePermission:
-  #   Type: "AWS::Lambda::Permission"
-  #   Properties:
-  #     Action: "lambda:InvokeFunction"
-  #     Principal: apigateway.amazonaws.com
-  #     FunctionName: !Ref UIOnDisconnectLambdaFunction
-  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
-  # UIOnDisconnectIntegration:
-  #   Type: AWS::ApiGatewayV2::Integration
-  #   Properties:
-  #     ApiId: !Ref UIWebSocketApi
-  #     Description: OnDisconnect Integration
-  #     IntegrationType: AWS_PROXY
-  #     IntegrationUri:
-  #       Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIOnDisconnectLambdaFunction.Arn}/invocations
-  # UIOnDisconnectRoute:
-  #   Type: AWS::ApiGatewayV2::Route
-  #   Properties:
-  #     ApiId: !Ref UIWebSocketApi
-  #     RouteKey: $disconnect
-  #     AuthorizationType: NONE
-  #     OperationName: UIOnDisconnectRoute
-  #     Target: !Join
-  #       - "/"
-  #       - - "integrations"
-  #         - !Ref UIOnDisconnectIntegration
+  UIOnDisconnectFunctionResourcePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref UIOnDisconnectLambdaFunction
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
+  UIOnDisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      Description: OnDisconnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIOnDisconnectLambdaFunction.Arn}/invocations
+  UIOnDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      OperationName: OnDisconnectRoute
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref UIOnDisconnectIntegration
 
-  UIDeployment:
+  Deployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - UIOnConnectRoute
       - UIDefaultWSRoute
-      # - UIOnDisconnectRoute
+      - UIOnDisconnectRoute
     Properties:
       ApiId: !Ref UIWebSocketApi
-  UIStage:
+  Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       StageName: prod
       Description: Prod Stage
-      DeploymentId: !Ref UIDeployment
+      DeploymentId: !Ref Deployment
       ApiId: !Ref UIWebSocketApi
   VisiblityUIEventsTopic:
     Type: AWS::SNS::Topic
@@ -742,6 +740,15 @@ Outputs:
         ],
       ]
     Description: Name of S3 bucket to hold website content
+  UIOnConnectLambdaFunctionArn:
+    Description: "OnConnect function ARN"
+    Value: !GetAtt UIOnConnectLambdaFunction.Arn
+  UIOnDisconnectLambdaFunctionArn:
+    Description: "OnDisconnect function ARN"
+    Value: !GetAtt UIOnDisconnectLambdaFunction.Arn
+  UIDefaultWSLambdaFunctionArn:
+    Description: "Post function ARN"
+    Value: !GetAtt UIDefaultWSLambdaFunction.Arn
   UIWebSocketApi:
     Description: "ARN to the Web Socket API Gateway"
     Value: !Ref UIWebSocketApi
@@ -758,7 +765,7 @@ Outputs:
           ".execute-api.",
           !Ref "AWS::Region",
           ".amazonaws.com/",
-          !Ref "UIStage",
+          !Ref "Stage",
         ],
       ]
     Export:
@@ -773,7 +780,7 @@ Outputs:
           ".execute-api.",
           !Ref "AWS::Region",
           ".amazonaws.com/",
-          !Ref "UIStage",
+          !Ref "Stage",
         ],
       ]
     Export:
