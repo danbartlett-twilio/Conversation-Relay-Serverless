@@ -485,9 +485,8 @@ Resources:
       Runtime: nodejs20.x
       Architectures:
         - arm64
-      Tags:
-        API: "Lookup"
-        Method: "Get"
+      Timeout: 5
+      MemorySize: 128
       Layers:
         - !Ref ConversationRelayTwilioClientLayer
       Environment:

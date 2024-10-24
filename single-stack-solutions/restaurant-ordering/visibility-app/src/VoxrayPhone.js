@@ -145,6 +145,7 @@ export const VoxrayPhone = () => {
     registerVoiceClient();
     // customerRegistration();
     // setupWebsockToController();
+    audiovisualizer.setupAudioVisualizerCanvas();
   }
 
   function extractEnvironment(queryString) {
@@ -390,15 +391,11 @@ export const VoxrayPhone = () => {
 
   async function registerVoiceClient() {
     if (voicetoken === undefined) {
-      // voicetoken = await getFromUrl(
-      //   "/voice/client_token?identity=" + clientRole + "&env=" + environment
-      // );
       let url =
         "https://90u5oq4e5j.execute-api.us-east-1.amazonaws.com/register-voice-client";
       let res = await axios.get(url);
-      console.log(res);
       voicetoken = res.data;
-      // console.log(voicetoken);
+      console.log(voicetoken);
     }
     createVoiceDevice();
 
@@ -662,7 +659,7 @@ export const VoxrayPhone = () => {
 
   const makeCall = (e) => {
     e.preventDefault();
-    callTo("test:voxray");
+    callTo("test:conversationRelay");
   };
 
   const hangupCall = (e) => {
