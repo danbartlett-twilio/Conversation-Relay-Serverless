@@ -11,4 +11,4 @@ Run
 ====================================================
 DATA LOADING
 ====================================================
-aws dynamodb put-item --table-name CR-RESTAURANT-ORDERING-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/restaurantOrderingUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
+aws dynamodb put-item --table-name ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/restaurantOrderingUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
