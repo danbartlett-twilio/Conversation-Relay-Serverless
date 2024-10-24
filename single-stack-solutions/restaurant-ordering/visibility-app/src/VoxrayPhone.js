@@ -562,41 +562,14 @@ export const VoxrayPhone = () => {
       console.log("call object not created yet");
       return;
     }
-
-    // var direction = activeCall.direction;
-
     activeCall.disconnect();
   }
 
   function createVoiceDevice() {
-    let selectedRegion;
-    let selectedChunderGw = "chunderw-vpc-gll.twilio.com";
-    let selectedEventGw = "eventgw.twilio.com";
-    switch (environment) {
-      case "dev":
-        selectedRegion = "dev-us1";
-        selectedChunderGw = "chunderw-vpc-gll.dev.twilio.com";
-        selectedEventGw = "eventgw.dev.twilio.com";
-        break;
-      case "stage":
-        selectedRegion = "stage-us1";
-        selectedChunderGw = "chunderw-vpc-gll.stage.twilio.com";
-        // selectedChunderGw = 'voice-js.ashburn.stage.twilio.com';
-        selectedEventGw = "eventgw.stage.twilio.com";
-        break;
-      default:
-        selectedRegion = "prod-us1";
-        selectedChunderGw = "chunderw-vpc-gll.twilio.com";
-        selectedEventGw = "eventgw.twilio.com";
-    }
-
     myDevice = new Device(voicetoken, {
-      debug: true,
-      chunderw: selectedChunderGw,
-      region: selectedRegion,
-      eventgw: selectedEventGw,
+      logLevel: 1,
+      codecPreferences: ["opus", "pcmu"],
     });
-
     registerTwilioDeviceHandlers(myDevice);
   }
 
