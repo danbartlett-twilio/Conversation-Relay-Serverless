@@ -1,4 +1,11 @@
 ====================================================
+BEFORE FIRST DEPLOY (install nodejs libraries)
+====================================================
+npm --prefix ./layers/layer-cr-open-ai-client/nodejs install
+npm --prefix ./layers/layer-cr-open-sendgrid-email-client/nodejs install
+npm --prefix ./layers/layer-cr-twilio-client/nodejs install
+
+====================================================
 DEPLOY TEMPLATE
 ====================================================
 Run `sam build` from this directory every time before deploying.
@@ -9,6 +16,6 @@ Run
 * The first time you deploy, add `--guided` (`sam deploy --guided --stack-name...`) to the above command to generate a configuration file. All subsequent commands do not need the --guided.
 
 ====================================================
-DATA LOADING
+DATA LOADING (once the stack has deployed once)
 ====================================================
 aws dynamodb put-item --table-name CR-RESTAURANT-ORDERING-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/restaurantOrderingUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)

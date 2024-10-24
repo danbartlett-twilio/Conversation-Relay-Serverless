@@ -9,7 +9,7 @@ Run
 * The first time you deploy, add `--guided` (`sam deploy --guided --stack-name...`) to the above command to generate a configuration file. All subsequent commands do not need the --guided.
 
 ====================================================
-DATA LOADING
+DATA LOADING (once the stack has deployed once)
 ====================================================
 aws dynamodb put-item --table-name ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/apartmentSearchUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
 aws dynamodb put-item --table-name ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/apartmentData.js | cat)" --profile $(cat ../../aws-profile.profile)

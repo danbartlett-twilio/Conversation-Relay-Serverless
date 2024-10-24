@@ -1,4 +1,16 @@
 ====================================================
+BEFORE FIRST DEPLOY (install nodejs libraries)
+====================================================
+npm --prefix ./layers/layer-cr-open-ai-client/nodejs install
+npm --prefix ./layers/layer-cr-open-sendgrid-email-client/nodejs install
+npm --prefix ./layers/layer-cr-twilio-client/nodejs install
+
+====================================================
 DEPLOY TEMPLATE
 ====================================================
 sam deploy --stack-name CR-OWL-SHOES --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+
+====================================================
+DATA LOADING (once the stack has deployed once)
+====================================================
+aws dynamodb put-item --table-name CR-OWL-SHOES-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/owlShoesUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
