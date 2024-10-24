@@ -1,4 +1,14 @@
 ====================================================
 DEPLOY TEMPLATE
 ====================================================
-sam deploy --stack-name USE-CASE-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
+Run `sam build` from this directory every time before deploying.
+
+Run 
+`sam deploy --stack-name USE-CASE-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM`
+
+* The first time you deploy, add `--guided` (`sam deploy --guided --stack-name...`) to the above command to generate a configuration file. All subsequent commands do not need the --guided.
+
+====================================================
+DATA LOADING
+====================================================
+aws dynamodb put-item --table-name CR-RESTAURANT-ORDERING-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/restaurantOrderingUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
