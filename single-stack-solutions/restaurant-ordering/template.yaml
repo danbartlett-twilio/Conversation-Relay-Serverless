@@ -488,6 +488,8 @@ Resources:
       Tags:
         API: "Lookup"
         Method: "Get"
+      Layers:
+        - !Ref ConversationRelayTwilioClientLayer
       Environment:
         Variables:
           TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
@@ -758,7 +760,7 @@ Resources:
           - Sid: AllowPublicReadAccess
             Effect: Allow
             Principal: "*"
-            Resource: !Sub "arn:aws:s3:::cr-ui-web-app-s3-bucket/*"
+            Resource: !Sub "arn:aws:s3:::cr-ui-web-app-s3-bucket-ben/*"
             Action:
               - "s3:GetObject"
 

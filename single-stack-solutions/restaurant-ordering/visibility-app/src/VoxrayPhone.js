@@ -394,7 +394,7 @@ export const VoxrayPhone = () => {
       //   "/voice/client_token?identity=" + clientRole + "&env=" + environment
       // );
       let url =
-        "https://qk652jqkx0.execute-api.us-east-1.amazonaws.com/register-voice-client";
+        "https://90u5oq4e5j.execute-api.us-east-1.amazonaws.com/register-voice-client";
       let res = await axios.get(url);
       console.log(res);
       voicetoken = res.data;
@@ -800,7 +800,7 @@ export const VoxrayPhone = () => {
           <Box display="flex" flexDirection="column">
             <Box padding="space50">
               <Heading as="h2" variant="heading20">
-                Voxray Test Client
+                ConversationRelay Test Client
               </Heading>
               <Stack orientation="horizontal" spacing="space60">
                 {!registered ? (
