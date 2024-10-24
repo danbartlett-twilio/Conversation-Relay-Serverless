@@ -5,6 +5,8 @@ import "./styles/VoxrayPhone.css";
 import StatusArea from "./StatusArea";
 // import Visualizer from "./Visualizer";
 import audiovisualizer from "./templates/audiovisualizer";
+import Visualizer from "./Visualizer";
+import ReactAudioVisualizer from "./ReactAudioVisualizer";
 
 // Twilio Paste
 import { Theme } from "@twilio-paste/core/theme";
@@ -456,7 +458,7 @@ export const VoxrayPhone = () => {
         updateCallButton("Call", true);
         updateDisconnectButton("Disconnect", false);
       } else {
-        let to = conn.parameters.To || "test:voxray";
+        let to = conn.parameters.To || "test:conversationRelay";
         status(
           "Call accepted: " + to + ", Call SID: " + conn.parameters.CallSid + ""
         );
@@ -1016,6 +1018,8 @@ export const VoxrayPhone = () => {
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
               <StatusArea status={messages} />
+              <ReactAudioVisualizer />
+              <Visualizer status={messages} />
             </Box>
           </Box>
         </Theme.Provider>
