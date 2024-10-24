@@ -472,13 +472,14 @@ Resources:
             ApiId: !Ref TwimlAPI
 
   ######################################################
-  # RegisterVoiceClientFunction
+  # RegisterVoiceClientFunction  =>
   ######################################################
   RegisterVoiceClientFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Description: "Handles voice client for react tester"
-      CodeUri: lambdas/register-voice-client/
+      FunctionName: !Sub "${AWS::StackName}-RegisterVoiceClientFunction"
+      Description: "Handles device regisatraion for react test client"
+      CodeUri: lambdas/util/twilio-register-voice-client/
       AutoPublishAlias: live
       Handler: app.lambdaHandler
       Runtime: nodejs20.x
@@ -493,7 +494,7 @@ Resources:
           TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
           TWILIO_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_KEY}}"
           TWILIO_API_SECRET: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_SECRET}}"
-          TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWIML_APP_SID}}"
+          TWILIO_TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_TWIML_APP_SID}}"
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !ImportValue CRPrimaryDynamoTableName
@@ -737,7 +738,7 @@ Resources:
   WebAppS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "cr-ui-web-app-s3-bucket"
+      BucketName: !Sub "cr-ui-web-app-s3-bucket-ben"
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html

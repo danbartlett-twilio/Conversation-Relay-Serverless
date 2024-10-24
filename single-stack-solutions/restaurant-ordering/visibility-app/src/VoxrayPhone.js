@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
 import StatusArea from "./StatusArea";
@@ -141,8 +142,9 @@ export const VoxrayPhone = () => {
       "Loaded client: " + clientRole + " in environment: " + environment
     );
 
-    setupWebsockToController();
-    audiovisualizer.setupAudioVisualizerCanvas();
+    registerVoiceClient();
+    // customerRegistration();
+    // setupWebsockToController();
   }
 
   function extractEnvironment(queryString) {
@@ -212,7 +214,9 @@ export const VoxrayPhone = () => {
   }
 
   function setupWebsockToController() {
-      var socket = new WebSocket("wss://hc70rsykdc.execute-api.us-east-1.amazonaws.com/prod/"); //issue is this is on port 3000 dev we need to set port
+    var socket = new WebSocket(
+      "wss://hc70rsykdc.execute-api.us-east-1.amazonaws.com/prod/"
+    ); //issue is this is on port 3000 dev we need to set port
     // const socket = new WebSocket("ws://localhost:3001/controlsocket"); //for dev we need to set up websocket
 
     socket.onopen = function (event) {
@@ -386,9 +390,15 @@ export const VoxrayPhone = () => {
 
   async function registerVoiceClient() {
     if (voicetoken === undefined) {
-      voicetoken = await getFromUrl(
-        "/voice/client_token?identity=" + clientRole + "&env=" + environment
-      );
+      // voicetoken = await getFromUrl(
+      //   "/voice/client_token?identity=" + clientRole + "&env=" + environment
+      // );
+      let url =
+        "https://qk652jqkx0.execute-api.us-east-1.amazonaws.com/register-voice-client";
+      let res = await axios.get(url);
+      console.log(res);
+      voicetoken = res.data;
+      // console.log(voicetoken);
     }
     createVoiceDevice();
 
@@ -759,6 +769,22 @@ export const VoxrayPhone = () => {
       : setShowAgentSettings(true);
   };
 
+  const updateDDBSettings = async (e) => {
+    try {
+      // const headers = {
+      //   headers: {
+      //     "Content-Type": "application/xml",
+      //   },
+      // };
+      const url =
+        "https://b78l5fru2e.execute-api.us-east-1.amazonaws.com/react-client-update";
+      const user = await axios.get(url);
+      console.log(user.data.Item);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
     <Theme.Provider theme="Twilio">
       <Box paddingX="space100">
@@ -803,10 +829,14 @@ export const VoxrayPhone = () => {
                   <Button onClick={hangupCall} variant="destructive_secondary">
                     Disconnect
                   </Button>
-                )} 
+                )}
 
                 <Button onClick={showOrHideAgentSettings} variant="secondary">
                   Show/Hide
+                </Button>
+
+                <Button onClick={updateDDBSettings} variant="primary">
+                  Test DDB Connection - Get User
                 </Button>
               </Stack>
             </Box>

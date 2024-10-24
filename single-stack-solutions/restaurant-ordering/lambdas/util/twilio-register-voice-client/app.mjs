@@ -14,7 +14,7 @@ export const lambdaHandler = async (event, context) => {
     const accessToken = new AccessToken(
       process.env.TWILIO_ACCOUNT_SID,
       process.env.TWILIO_API_KEY,
-      process.env.API_SECRET,
+      process.env.TWILIO_API_SECRET,
       { identity: "test:conversationRelay" }
     );
 
