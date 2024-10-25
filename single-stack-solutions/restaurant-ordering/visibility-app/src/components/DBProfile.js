@@ -16,7 +16,7 @@ export function Profile(props) {
   const getProfile = async (e) => {
     try {
       const url =
-        "https://b78l5fru2e.execute-api.us-east-1.amazonaws.com/react-client-update";
+        "https://aqwsvzbsa6.execute-api.us-east-1.amazonaws.com/get-profiles";
       const user = await axios.get(url);
       console.log(user.data.Item);
       setProfile(user.data.Item);

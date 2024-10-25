@@ -871,10 +871,10 @@ Outputs:
     Description: "API for registering voice client"
     Value: !Sub "https://${RegisterVoiceClientAPI}.execute-api.${AWS::Region}.amazonaws.com/register-voice-client"
   GetUseCasesAPI:
-    Description: "API for registering voice client"
+    Description: "API for getting use cases for react client"
     Value: !Sub "https://${GetUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-use-cases"
   GetProfilesAPI:
-    Description: "API for registering voice client"
+    Description: "API for getting profiles for react client"
     Value: !Sub "https://${GetProfilesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-profiles"
   GetCallsAPI:
     Description: "API for getCalls"

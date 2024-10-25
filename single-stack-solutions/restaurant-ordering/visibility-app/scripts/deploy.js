@@ -16,9 +16,13 @@ const getCloudFormationOuputValue = (key) => {
 const uploadFiles = () => {
   const sourceDir = path.resolve(path.join(__dirname, "../build"));
   const s3BucketName = getCloudFormationOuputValue("WebAppS3BucketName");
+  // const profilesAPI = getCloudFormationOuputValue("GetProfilesAPI");
+  // const useCaseAPI = getCloudFormationOuputValue("GetUseCasesAPI");
 
   console.log(`Uploading files from ${sourceDir} to s3://${s3BucketName}`);
-  child_process.execSync(`aws s3 sync ${sourceDir} s3://${s3BucketName}`, { stdio: "inherit" });
+  child_process.execSync(`aws s3 sync ${sourceDir} s3://${s3BucketName}`, {
+    stdio: "inherit",
+  });
 };
 
 // const clearCloudFrontCache = () => {

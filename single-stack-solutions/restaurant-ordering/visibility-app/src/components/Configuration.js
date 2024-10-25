@@ -14,10 +14,10 @@ export function Configuration(props) {
   const getConfig = async (e) => {
     try {
       const url =
-        "https://b78l5fru2e.execute-api.us-east-1.amazonaws.com/react-client-update";
+        "https://8ldhh8emwh.execute-api.us-east-1.amazonaws.com/get-use-cases";
       const config = await axios.get(url);
-      console.log(config.data.Item);
-      setConfig(config.data.Item);
+      console.log(config);
+      //   setConfig(config.data.Item);
     } catch (e) {
       console.log(e);
     }
