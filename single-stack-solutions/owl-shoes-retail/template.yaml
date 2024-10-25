@@ -469,4 +469,4 @@ Resources:
 Outputs:
   TwimlAPI:
     Description: "URL to use to configure Voice Handler for Twilio Phone Number (returns TwiML!)"
-    Value: !Sub "https://${TwimlAPI}.execute-api.${AWS::Region}.amazonaws.com/call-setup-restaurant-ordering"      
+    Value: !Sub "https://${TwimlAPI}.execute-api.${AWS::Region}.amazonaws.com/call-setup-owl-shoes"
