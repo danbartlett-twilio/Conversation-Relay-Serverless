@@ -190,9 +190,9 @@ Resources:
       MemorySize: 128
       Policies:        
         - DynamoDBCrudPolicy:
-          TableName: !ImportValue  CRPrimaryDynamoTableName
+            TableName: !ImportValue  CRPrimaryDynamoTableName
         - SNSPublishMessagePolicy:
-          TopicName: !ImportValue TwilioSendMessageTopic     
+            TopicName: !ImportValue TwilioSendMessageTopic     
       Layers:
         -
           !Sub 
@@ -210,6 +210,7 @@ Resources:
   RefreshApartmentAppointmentsFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: 'RefreshApartmentAppointmentsFunction'
       Description: "From scheduled events, delete old apartment appointments and add new ones for the next week."
       CodeUri: lambdas/refresh-apartment-appointments/
       AutoPublishAlias: live
@@ -238,4 +239,13 @@ Resources:
         #    ScheduleExpression: 'cron(22 18 ? * 2,3,4,5,6 *)' #11:22 AM PT            
         #    Input: '{"config": {"twilioSeed": false,"sinkAddresses": true,"sinkMin": 800,"sinkMax": 1300,"subuser": "travel-transactional","template_id": "d-26ef093705de41a5851577001a9ddf6f"}}'
 
-        
+##########################################################################
+#   Outputs
+##########################################################################
+Outputs:
+  
+  RefreshApartmentAppointmentsFunctionName:
+    Description: Name of the function that refreshes (creates new ones over next 2 weeks) available apartments.
+    Value: !Ref RefreshApartmentAppointmentsFunction
+    Export:
+      Name: 'RefreshApartmentAppointmentsFunctionName'        

@@ -13,3 +13,13 @@ DATA LOADING (once the stack has deployed once)
 ====================================================
 aws dynamodb put-item --table-name ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/apartmentSearchUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
 aws dynamodb put-item --table-name ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/apartmentData.js | cat)" --profile $(cat ../../aws-profile.profile)
+
+====================================================
+REFRESH APARTMENT LISTINGS (once the stack has deployed once and whenever you need)
+====================================================
+aws lambda invoke \
+    --cli-binary-format raw-in-base64-out \
+    --function-name RefreshApartmentAppointmentsFunction \
+    --payload '{ "foo": "bar" }' \
+    --profile $(cat ../../aws-profile.profile) \
+    lambda-invoke-response.json 

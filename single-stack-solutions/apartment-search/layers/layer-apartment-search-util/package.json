@@ -1,0 +1,12 @@
+{
+  "name": "dynamodb-util",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dynamodb-util.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
