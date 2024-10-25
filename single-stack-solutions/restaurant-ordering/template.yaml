@@ -517,14 +517,14 @@ Resources:
         - !Ref ConversationRelayTwilioClientLayer
       Environment:
         Variables:
-          TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
           TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
           TWILIO_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_KEY}}"
           TWILIO_API_SECRET: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_SECRET}}"
           TWILIO_TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_TWIML_APP_SID}}"
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !ImportValue CRPrimaryDynamoTableName
+            TableName: !Ref PrimaryDynamoDBTable
       Events:
         RegisterVoiceClientEvent:
           Type: HttpApi
@@ -552,14 +552,14 @@ Resources:
       #   - !Ref ConversationRelayTwilioClientLayer
       Environment:
         Variables:
-          TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
           # TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
           # TWILIO_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_KEY}}"
           # TWILIO_API_SECRET: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_SECRET}}"
           # TWILIO_TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_TWIML_APP_SID}}"
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !ImportValue CRPrimaryDynamoTableName
+            TableName: !Ref PrimaryDynamoDBTable
       Events:
         GetProfilesEvent:
           Type: HttpApi
@@ -588,14 +588,16 @@ Resources:
       #   - !Ref ConversationRelayTwilioClientLayer
       Environment:
         Variables:
-          TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
+          # TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
           # TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
           # TWILIO_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_KEY}}"
           # TWILIO_API_SECRET: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_SECRET}}"
           # TWILIO_TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_TWIML_APP_SID}}"
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !ImportValue CRPrimaryDynamoTableName
+            TableName: !Ref PrimaryDynamoDBTable
+
       Events:
         GetUseCasesEvent:
           Type: HttpApi

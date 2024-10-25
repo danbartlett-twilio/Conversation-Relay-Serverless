@@ -6,7 +6,6 @@ import StatusArea from "./StatusArea";
 // import Visualizer from "./Visualizer";
 import Profile from "./components/DBProfile";
 import Configuration from "./components/Configuration";
-
 import audiovisualizer from "./templates/audiovisualizer";
 import Visualizer from "./Visualizer";
 import ReactAudioVisualizer from "./ReactAudioVisualizer";

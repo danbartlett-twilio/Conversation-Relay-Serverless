@@ -1,11 +1,8 @@
 /**
- * react-client-update
- *
- * Handle react client update
+ * get-profiles
  *
  */
 
-import querystring from "node:querystring";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,

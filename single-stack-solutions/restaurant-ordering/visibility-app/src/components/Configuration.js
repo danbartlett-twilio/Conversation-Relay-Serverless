@@ -3,12 +3,22 @@ import axios from "axios";
 
 export function Configuration(props) {
   const [config, setConfig] = useState({
-    useCase: "",
     pk: "",
     pk1: "",
     sk: "",
     sk1: "",
-    useCase: "",
+    conversationRelayParams: {
+      dtmfDetection: "",
+      interruptByDtmf: "",
+      ttsProvider: "",
+      voice: "",
+      welcomeGreeting: "",
+    },
+    dtmfHandlers: "",
+    prompt: "",
+    title: "",
+    description: "",
+    tools: "",
   });
 
   const getConfig = async (e) => {
@@ -16,8 +26,8 @@ export function Configuration(props) {
       const url =
         "https://8ldhh8emwh.execute-api.us-east-1.amazonaws.com/get-use-cases";
       const config = await axios.get(url);
-      console.log(config);
-      //   setConfig(config.data.Item);
+      console.log(config?.data?.Item);
+      setConfig(config.data.Item);
     } catch (e) {
       console.log(e);
     }
@@ -29,7 +39,11 @@ export function Configuration(props) {
 
   return (
     <div>
-      {config.useCase} {config.pk} {config.sk}
+      {config.sk} {config.pk} {config.pk1}
+      <div>
+        Welcome Greeting:
+        {config.conversationRelayParams.welcomeGreeting}
+      </div>
     </div>
   );
 }
