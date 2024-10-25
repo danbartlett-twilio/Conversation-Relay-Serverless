@@ -421,6 +421,7 @@ Resources:
   RegisterVoiceClientAPI:
     Type: AWS::Serverless::HttpApi
     Properties:
+      Name: !Sub "${AWS::StackName}-RegisterVoiceClientAPI"
       Description: Rest API used to handle updates to react client
       CorsConfiguration:
         AllowMethods:
@@ -430,6 +431,31 @@ Resources:
         AllowHeaders:
           - "*"
 
+  GetUseCasesAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub "${AWS::StackName}-GetUseCasesAPI"
+      Description: Rest API used to handle inbound requests from Twilio.
+      CorsConfiguration:
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+
+  GetProfilesAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub "${AWS::StackName}-GetProfilesAPI"
+      Description: Rest API used to handle inbound requests from Twilio.
+      CorsConfiguration:
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
   ######################################################
   # CallSetupFunction =>
   ######################################################
@@ -506,6 +532,77 @@ Resources:
             Path: /register-voice-client
             Method: ANY
             ApiId: !Ref RegisterVoiceClientAPI
+  ######################################################
+  # GetProfiles  =>
+  ######################################################
+  GetProfilesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-GetProfilesFunction"
+      Description: "Handles returning profiles to test client"
+      CodeUri: lambdas/util/get-profiles/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      Timeout: 5
+      MemorySize: 128
+      # Layers:
+      #   - !Ref ConversationRelayTwilioClientLayer
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
+          # TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
+          # TWILIO_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_KEY}}"
+          # TWILIO_API_SECRET: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_SECRET}}"
+          # TWILIO_TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_TWIML_APP_SID}}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue CRPrimaryDynamoTableName
+      Events:
+        GetProfilesEvent:
+          Type: HttpApi
+          Properties:
+            Path: /get-profiles
+            Method: ANY
+            ApiId: !Ref GetProfilesAPI
+
+  ######################################################
+  # GetUseCases  =>
+  ######################################################
+  GetUseCasesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-GetUseCasesFunction"
+      Description: "Handles return use cases for react client"
+      CodeUri: lambdas/util/get-use-cases/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      Timeout: 5
+      MemorySize: 128
+      # Layers:
+      #   - !Ref ConversationRelayTwilioClientLayer
+      Environment:
+        Variables:
+          TABLE_NAME: !ImportValue CRPrimaryDynamoTableName
+          # TWILIO_ACCOUNT_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_ACCOUNT_SID}}"
+          # TWILIO_API_KEY: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_KEY}}"
+          # TWILIO_API_SECRET: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_API_SECRET}}"
+          # TWILIO_TWIML_APP_SID: "{{resolve:secretsmanager:CR_RESTAURANT_ORDERING:SecretString:TWILIO_TWIML_APP_SID}}"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !ImportValue CRPrimaryDynamoTableName
+      Events:
+        GetUseCasesEvent:
+          Type: HttpApi
+          Properties:
+            Path: /get-use-cases
+            Method: ANY
+            ApiId: !Ref GetUseCasesAPI
 
   GetCallsAPI:
     Type: AWS::Serverless::HttpApi
@@ -773,6 +870,12 @@ Outputs:
   RegisterVoiceClientAPI:
     Description: "API for registering voice client"
     Value: !Sub "https://${RegisterVoiceClientAPI}.execute-api.${AWS::Region}.amazonaws.com/register-voice-client"
+  GetUseCasesAPI:
+    Description: "API for registering voice client"
+    Value: !Sub "https://${GetUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-use-cases"
+  GetProfilesAPI:
+    Description: "API for registering voice client"
+    Value: !Sub "https://${GetProfilesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-profiles"
   GetCallsAPI:
     Description: "API for getCalls"
     Value: !Sub "https://${GetCallsAPI}.execute-api.${AWS::Region}.amazonaws.com/"

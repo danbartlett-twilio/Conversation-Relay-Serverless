@@ -4,6 +4,9 @@ import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
 import StatusArea from "./StatusArea";
 // import Visualizer from "./Visualizer";
+import Profile from "./components/DBProfile";
+import Configuration from "./components/Configuration";
+
 import audiovisualizer from "./templates/audiovisualizer";
 import Visualizer from "./Visualizer";
 import ReactAudioVisualizer from "./ReactAudioVisualizer";
@@ -741,22 +744,6 @@ export const VoxrayPhone = () => {
       : setShowAgentSettings(true);
   };
 
-  const updateDDBSettings = async (e) => {
-    try {
-      // const headers = {
-      //   headers: {
-      //     "Content-Type": "application/xml",
-      //   },
-      // };
-      const url =
-        "https://b78l5fru2e.execute-api.us-east-1.amazonaws.com/react-client-update";
-      const user = await axios.get(url);
-      console.log(user.data.Item);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
   return (
     <Theme.Provider theme="Twilio">
       <Box paddingX="space100">
@@ -805,10 +792,6 @@ export const VoxrayPhone = () => {
 
                 <Button onClick={showOrHideAgentSettings} variant="secondary">
                   Show/Hide
-                </Button>
-
-                <Button onClick={updateDDBSettings} variant="primary">
-                  Test DDB Connection - Get User
                 </Button>
               </Stack>
             </Box>
@@ -1015,6 +998,10 @@ export const VoxrayPhone = () => {
             </Grid>
 
             <Box padding="space50">
+              <Label>Profile</Label>
+              <Profile />
+              <Label>Configuration</Label>
+              <Configuration />
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
               <StatusArea status={messages} />
