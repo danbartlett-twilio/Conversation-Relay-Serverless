@@ -10,12 +10,15 @@ export function Visualizer(props) {
 
   function setupWebsockToController() {
     //This is the websocket connection lambda we need to set up
-    const socket = new WebSocket("ws://localhost:3000/client");
+    // const socket = new WebSocket("ws://localhost:3000/client");
+    const socket = new WebSocket(
+      " wss://8bs3g9ns29.execute-api.us-east-1.amazonaws.com/prod"
+    ); //for dev we need to set up websocket
 
     socket.onopen = function (event) {
       console.log("WebSocket call opened:", event);
       controlsocket = socket;
-      controlsocket.send(JSON.stringify("websocket opened"));
+      controlsocket.send(JSON.stringify("websocket opened")); //this is corretly firing the websocket
     };
 
     socket.onmessage = function (event) {
@@ -43,7 +46,7 @@ export function Visualizer(props) {
       }
 
       setMessages((prev) => prev + message);
-      setMessageArr((prev) => [...messageArr, prev + message]);
+      // setMessageArr((prev) => [...messageArr, prev + message]);
     };
 
     socket.onerror = function (event) {
