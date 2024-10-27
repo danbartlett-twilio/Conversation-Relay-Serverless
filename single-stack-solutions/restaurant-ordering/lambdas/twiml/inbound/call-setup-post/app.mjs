@@ -87,7 +87,7 @@ export const lambdaHandler = async (event, context) => {
         // This item contains core data for the session
         let connectionItem = {
             pk: event.requestContext.requestId,
-            sk: "connection",
+            sk: "initialConnection",
             useCase: useCaseTitle,
             userContext: userContext,
             tools: tools, // tools passed into session -- can be changed dynamically.

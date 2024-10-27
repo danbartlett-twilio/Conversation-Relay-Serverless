@@ -33,9 +33,9 @@ export const lambdaHandler = async (event, context) => {
         // cid is the requestID from the initial setup         
         const initialItems = await ddbDocClient.send(new QueryCommand( {
             TableName: process.env.TABLE_NAME,
-            KeyConditionExpression: "#pk = :pk", 
-            ExpressionAttributeNames: { '#pk': 'pk' }, 
-            ExpressionAttributeValues: { ':pk': event.queryStringParameters.cid } 
+            KeyConditionExpression: "#pk = :pk and #sk = :sk", 
+            ExpressionAttributeNames: { '#pk': 'pk', '#sk': 'sk' }, 
+            ExpressionAttributeValues: { ':pk': event.queryStringParameters.cid, ':sk': 'initialConnection' } 
         } ) );
 
         if (!initialItems.Items.length === 0) {
@@ -53,7 +53,8 @@ export const lambdaHandler = async (event, context) => {
                         Item: {
                             ...obj, 
                             pk: event.requestContext.connectionId,
-                            pk1: "connection",
+                            sk: "finalConnection",
+                            pk1: "finalConnection",
                             sk1: obj.From,
                             expireAt:  parseInt((Date.now() / 1000) + 86400)  // Expire "demo" session data automatically (can be removed)
                         }
