@@ -435,7 +435,20 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       Name: !Sub "${AWS::StackName}-GetUseCasesAPI"
-      Description: Rest API used to handle inbound requests from Twilio.
+      Description: Rest API used to handle requests from react client for use case configuration.
+      CorsConfiguration:
+        AllowMethods:
+          - "*"
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+
+  UpdateUseCasesAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub "${AWS::StackName}-UpdateUseCasesAPI"
+      Description: Rest API used to handle requests from react client for use case configuration.
       CorsConfiguration:
         AllowMethods:
           - "*"
@@ -604,7 +617,40 @@ Resources:
           Properties:
             Path: /get-use-cases
             Method: ANY
-            ApiId: !Ref GetUseCasesAPI
+            ApiId:
+              !Ref GetUseCasesAPI
+
+              ######################################################
+  # UpdateUseCases  =>
+  ######################################################
+  UpdateUseCasesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-UpdateUseCasesFunction"
+      Description: "Handles updating use cases from react client"
+      CodeUri: lambdas/util/update-use-cases/
+      AutoPublishAlias: live
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      Timeout: 5
+      MemorySize: 128
+      # Layers:
+      #   - !Ref ConversationRelayTwilioClientLayer
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PrimaryDynamoDBTable
+      Events:
+        GetUseCasesEvent:
+          Type: HttpApi
+          Properties:
+            Path: /update-use-cases
+            Method: ANY
+            ApiId: !Ref UpdateUseCasesAPI
 
   GetCallsAPI:
     Type: AWS::Serverless::HttpApi
@@ -875,6 +921,9 @@ Outputs:
   GetUseCasesAPI:
     Description: "API for getting use cases for react client"
     Value: !Sub "https://${GetUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-use-cases"
+  UpdateUseCasesAPI:
+    Description: "API for getting use cases for react client"
+    Value: !Sub "https://${UpdateUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/update-use-cases"
   GetProfilesAPI:
     Description: "API for getting profiles for react client"
     Value: !Sub "https://${GetProfilesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-profiles"
