@@ -32,12 +32,11 @@ export const lambdaHandler = async (event, context) => {
   const callConnection = await ddbDocClient.send(
     new GetCommand({
       TableName: process.env.TABLE_NAME,
-      Key: { pk: connectionId, sk: "connection" },
+      Key: { pk: connectionId, sk: "finalConnection" },
     })
   );
 
-  console.log("call connection is", callConnection);
-
+  console.log("call Connection item: " + JSON.stringify(callConnection));
   // Instantiate WebSocket client to return text to Twilio
   // This client can be used in this lambda and/or passed
   // to other modules.

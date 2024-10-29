@@ -110,7 +110,7 @@ export const lambdaHandler = async (event, context) => {
     // This item contains core data for the session
     let connectionItem = {
       pk: event.requestContext.requestId,
-      sk: "connection",
+      sk: "initialConnection",
       useCase: useCaseTitle,
       userContext: userContext,
       tools: tools, // tools passed into session -- can be changed dynamically.
@@ -118,8 +118,6 @@ export const lambdaHandler = async (event, context) => {
       expireAt: Math.floor(Date.now() / 1000) + 120, // Delete Record after 2 minutes
       ...twilio_body,
     };
-
-    console.log("connection item is", connectionItem);
 
     // This is the prompt to use and the first chat message
     // This prompt could be altered dynamically BEFORE this step
