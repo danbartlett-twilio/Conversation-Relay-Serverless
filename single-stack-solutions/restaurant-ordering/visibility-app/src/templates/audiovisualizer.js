@@ -165,10 +165,10 @@ function analyze(call) {
     // Increment sampleTime
     sampleTime++;
     if (sampleTime % 20 === 0) {
-      console.log(
-        "sampleTime: " + sampleTime + ", bufferIndex: " + bufferIndex
-      );
-      console.log("input volume", inputVolume, "output volume", outputVolume);
+      // console.log(
+      //   "sampleTime: " + sampleTime + ", bufferIndex: " + bufferIndex
+      // );
+      // console.log("input volume", inputVolume, "output volume", outputVolume);
     }
 
     // Call the draw function

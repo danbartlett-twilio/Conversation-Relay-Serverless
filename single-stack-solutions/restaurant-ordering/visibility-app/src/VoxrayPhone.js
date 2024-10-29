@@ -2,65 +2,63 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
-import StatusArea from "./StatusArea";
+// import StatusArea from "./StatusArea";
 // import Visualizer from "./Visualizer";
 // import Profile from "./components/DBProfile";
 import Configuration from "./components/Configuration";
 import audiovisualizer from "./templates/audiovisualizer";
 import Visualizer from "./Visualizer";
-import ReactAudioVisualizer from "./ReactAudioVisualizer";
+// import ReactAudioVisualizer from "./ReactAudioVisualizer";
 
 // Twilio Paste
 import { Theme } from "@twilio-paste/core/theme";
-import { Stack, Box, Heading, Button, Label } from "@twilio-paste/core";
+import { Box, Heading, Label } from "@twilio-paste/core";
 
-let myDevice;
-let activeCall;
+// let myDevice;
+// let activeCall;
 let voicetoken;
-let environment;
-let clientRole;
+// let environment;
+// let clientRole;
 // let callType;
-let controlsocket;
-let messageString = "";
+// let controlsocket;
+// let messageString = "";
 
 export const VoxrayPhone = () => {
-  const [messages, setMessages] = useState("");
-  const [registered, setRegistered] = useState(false);
-
-  // const [showAgentSettings, setShowAgentSettings] = useState(false);
+  // const [messages, setMessages] = useState("");
+  const [device, setDevice] = useState();
 
   async function runOnLoad() {
-    myDevice = undefined;
-    activeCall = undefined;
+    // myDevice = undefined;
+    // activeCall = undefined;
     registerVoiceClient();
     audiovisualizer.setupAudioVisualizerCanvas();
   }
 
-  function getFromUrl(url) {
-    return new Promise((resolve) => {
-      const xmlhttp = new XMLHttpRequest();
-      xmlhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-          resolve(this.responseText);
-        }
-      };
-      xmlhttp.open("GET", url, true);
-      xmlhttp.send();
-    });
-  }
+  // function getFromUrl(url) {
+  //   return new Promise((resolve) => {
+  //     const xmlhttp = new XMLHttpRequest();
+  //     xmlhttp.onreadystatechange = function () {
+  //       if (this.readyState === 4 && this.status === 200) {
+  //         resolve(this.responseText);
+  //       }
+  //     };
+  //     xmlhttp.open("GET", url, true);
+  //     xmlhttp.send();
+  //   });
+  // }
 
-  function sendEventOverControlSocket(event) {
-    if (controlsocket === undefined) {
-      return;
-    }
+  // function sendEventOverControlSocket(event) {
+  //   if (controlsocket === undefined) {
+  //     return;
+  //   }
 
-    var message = {
-      event: event,
-    };
+  //   var message = {
+  //     event: event,
+  //   };
 
-    console.log(">>> sending message: " + JSON.stringify(message));
-    controlsocket.send(JSON.stringify(message));
-  }
+  //   console.log(">>> sending message: " + JSON.stringify(message));
+  //   controlsocket.send(JSON.stringify(message));
+  // }
 
   // function sendConfigOverControlSocket(id, value) {
   //   if (controlsocket === undefined) {
@@ -162,91 +160,61 @@ export const VoxrayPhone = () => {
   //   sendConfigOverControlSocket(id, value);
   // }
 
-  function setState(state) {
-    console.log("Set state: " + state);
-  }
+  // function setState(state) {
+  //   console.log("Set state: " + state);
+  // }
 
-  function reportCallEvent(callEvent) {
-    sendEventOverControlSocket(clientRole + "-" + callEvent);
-  }
+  // function reportCallEvent(callEvent) {
+  //   sendEventOverControlSocket(clientRole + "-" + callEvent);
+  // }
 
-  /*
-     All valid {@link Device} event names.
-      export enum EventName {
-        Error = 'error',
-        Incoming = 'incoming',
-        Destroyed = 'destroyed',
-        Unregistered = 'unregistered',
-        Registering = 'registering',
-        Registered = 'registered',
-        TokenWillExpire = 'tokenWillExpire',
-      }
-     */
   function registerTwilioDeviceHandlers(device) {
     device.on("incoming", function (conn) {
-      status(
+      console.log(
         "Call incoming: " +
           conn.parameters.From +
           ", Call SID: " +
           conn.parameters.CallSid +
           ""
       );
-      setState("incoming");
-      activeCall = conn;
-
-      setupCallEventHandlers(activeCall);
-
-      // updateCallButton("Answer", false);
-      // updateDisconnectButton("Reject", false);
-
-      reportCallEvent("call-incoming");
+      console.log("incoming");
+      // activeCall = conn;
+      // setupCallEventHandlers(activeCall);
     });
 
     device.on("registered", (dev) => {
-      status("Device ready to receive incoming calls\n");
+      console.log("Device ready to receive incoming calls\n");
       // updateRegistrationButton(true);
       // updateCallButton("Call", false);
       // updateDisconnectButton("Disconnect", true);
-      if (controlsocket !== undefined) {
-        reportCallEvent("registered:" + environment);
-      }
     });
 
     device.on("unregistered", (dev) => {
-      status("Device unregistered\n");
-      updateRegistrationButton(false);
-      updateCallButton("Call", true);
-      updateDisconnectButton("Disconnect", false);
-      if (controlsocket !== undefined) {
-        reportCallEvent("unregistered:" + environment);
-      }
+      console.log("Device unregistered\n");
+      // updateRegistrationButton(false);
+      // updateCallButton("Call", true);
+      // updateDisconnectButton("Disconnect", false);
     });
 
     device.on("tokenWillExpire", (dev) => {
-      status("Device token is expiring\n");
-      getFromUrl(
-        "/voice/client_token?identity=" + clientRole + "&env=" + environment
-      ).then((token) => dev.updateToken(token));
+      console.log("Device token is expiring\n");
+      // getFromUrl(
+      //   "/voice/client_token?identity=" + clientRole + "&env=" + environment
+      // ).then((token) => dev.updateToken(token));
     });
 
     device.on("error", (dev) => {
-      status("Device encountered error\n");
-      updateRegistrationButton(false);
-      updateCallButton("Call", true);
-      updateDisconnectButton("Disconnect", false);
-      if (controlsocket !== undefined) {
-        reportCallEvent("errored:" + environment);
-      }
+      console.log("Device encountered error\n");
+      // updateRegistrationButton(false);
+      // updateCallButton("Call", true);
+      // updateDisconnectButton("Disconnect", false);
     });
 
     device.on("destroyed", (dev) => {
-      status("Device destroyed\n");
-      updateRegistrationButton(true);
-      updateCallButton("Call", true);
-      updateDisconnectButton("Disconnect", true);
-      if (controlsocket !== undefined) {
-        reportCallEvent("destroyed:" + environment);
-      }
+      console.log("Device destroyed\n");
+      // updateRegistrationButton(true);
+      // updateCallButton("Call", true);
+      // updateDisconnectButton("Disconnect", true);
     });
   }
 
@@ -259,8 +227,6 @@ export const VoxrayPhone = () => {
       console.log(voicetoken);
     }
     createVoiceDevice();
-
-    myDevice.register();
   }
 
   //   async function agentRegistration() {
@@ -271,103 +237,103 @@ export const VoxrayPhone = () => {
   //   await registerVoiceClient();
   // }
 
-  function setupCallEventHandlers(call) {
-    if (!call) {
-      console.error("undefined call object");
-      return;
-    }
+  // function setupCallEventHandlers(call) {
+  //   if (!call) {
+  //     console.error("undefined call object");
+  //     return;
+  //   }
 
-    call.on("ringing", function (hasEarlyMedia) {
-      status("Call ringing");
-      if (hasEarlyMedia) {
-        status("Has early media");
-      }
-      reportCallEvent("call-ringing");
-      updateCallButton("Call", true);
-      updateDisconnectButton("Cancel", false);
-    });
+  //   call.on("ringing", function (hasEarlyMedia) {
+  //     status("Call ringing");
+  //     if (hasEarlyMedia) {
+  //       status("Has early media");
+  //     }
+  //     reportCallEvent("call-ringing");
+  //     updateCallButton("Call", true);
+  //     updateDisconnectButton("Cancel", false);
+  //   });
 
-    call.on("cancel", function (conn) {
-      status("Call cancel");
-      activeCall = undefined;
-      setState("ready");
-      updateCallButton("Call", false);
-      if (controlsocket !== undefined) {
-        // reportCallEvent('call-cancelled');
-        reportCallEvent("call-ended");
-      }
-    });
+  //   call.on("cancel", function (conn) {
+  //     status("Call cancel");
+  //     activeCall = undefined;
+  //     setState("ready");
+  //     updateCallButton("Call", false);
+  //     if (controlsocket !== undefined) {
+  //       // reportCallEvent('call-cancelled');
+  //       reportCallEvent("call-ended");
+  //     }
+  //   });
 
-    call.on("reject", function (conn) {
-      status("Call reject");
-      activeCall = undefined;
-      setState("ready");
-      updateCallButton("Call", false);
-      if (controlsocket !== undefined) {
-        // reportCallEvent('call-cancelled');
-        reportCallEvent("call-ended");
-      }
-    });
+  //   call.on("reject", function (conn) {
+  //     status("Call reject");
+  //     activeCall = undefined;
+  //     setState("ready");
+  //     updateCallButton("Call", false);
+  //     if (controlsocket !== undefined) {
+  //       // reportCallEvent('call-cancelled');
+  //       reportCallEvent("call-ended");
+  //     }
+  //   });
 
-    call.on("accept", function (conn) {
-      // Happens in both incoming and outgoing calls
-      console.log("Call direction:", conn.direction);
-      if (conn.direction === "INCOMING") {
-        status("Call accepted");
-        updateCallButton("Call", true);
-        updateDisconnectButton("Disconnect", false);
-      } else {
-        let to = conn.parameters.To || "test:conversationRelay";
-        status(
-          "Call accepted: " + to + ", Call SID: " + conn.parameters.CallSid + ""
-        );
-        updateCallButton("Call", true);
-        updateDisconnectButton("Disconnect", false);
-      }
-      if (controlsocket !== undefined) {
-        // reportCallEvent('call-answered');
-        reportCallEvent("call-connected:" + conn.parameters.CallSid);
-      }
-    });
+  //   call.on("accept", function (conn) {
+  //     // Happens in both incoming and outgoing calls
+  //     console.log("Call direction:", conn.direction);
+  //     if (conn.direction === "INCOMING") {
+  //       status("Call accepted");
+  //       updateCallButton("Call", true);
+  //       updateDisconnectButton("Disconnect", false);
+  //     } else {
+  //       let to = conn.parameters.To || "test:conversationRelay";
+  //       status(
+  //         "Call accepted: " + to + ", Call SID: " + conn.parameters.CallSid + ""
+  //       );
+  //       updateCallButton("Call", true);
+  //       updateDisconnectButton("Disconnect", false);
+  //     }
+  //     if (controlsocket !== undefined) {
+  //       // reportCallEvent('call-answered');
+  //       reportCallEvent("call-connected:" + conn.parameters.CallSid);
+  //     }
+  //   });
 
-    call.on("disconnect", function (conn) {
-      status("Call disconnected\n");
-      activeCall = undefined;
-      updateCallButton("Call", false);
-      updateDisconnectButton("Disconnect", true);
-      if (controlsocket !== undefined) {
-        reportCallEvent("call-ended");
-      }
-    });
+  //   call.on("disconnect", function (conn) {
+  //     status("Call disconnected\n");
+  //     activeCall = undefined;
+  //     updateCallButton("Call", false);
+  //     updateDisconnectButton("Disconnect", true);
+  //     if (controlsocket !== undefined) {
+  //       reportCallEvent("call-ended");
+  //     }
+  //   });
 
-    call.on("transportClose", function (conn) {
-      status("Call transportClose.\n");
-      activeCall = undefined;
-      updateCallButton("Call", false);
-      updateDisconnectButton("Disconnect", true);
-      if (controlsocket !== undefined) {
-        reportCallEvent("call-ended");
-      }
-    });
+  //   call.on("transportClose", function (conn) {
+  //     status("Call transportClose.\n");
+  //     activeCall = undefined;
+  //     updateCallButton("Call", false);
+  //     updateDisconnectButton("Disconnect", true);
+  //     if (controlsocket !== undefined) {
+  //       reportCallEvent("call-ended");
+  //     }
+  //   });
 
-    call.on("error", function (error) {
-      status("Call error: " + error.message + " (" + error.code + ")\n");
-      activeCall = undefined;
-      updateCallButton("Call", false);
-      updateDisconnectButton("Disconnect", true);
-      if (controlsocket !== undefined) {
-        reportCallEvent("call-errored");
-      }
-    });
+  //   call.on("error", function (error) {
+  //     status("Call error: " + error.message + " (" + error.code + ")\n");
+  //     activeCall = undefined;
+  //     updateCallButton("Call", false);
+  //     updateDisconnectButton("Disconnect", true);
+  //     if (controlsocket !== undefined) {
+  //       reportCallEvent("call-errored");
+  //     }
+  //   });
 
-    call.on("warning", function (name) {
-      console.log("Network warning: " + name + "\n");
-    });
+  //   call.on("warning", function (name) {
+  //     console.log("Network warning: " + name + "\n");
+  //   });
 
-    call.on("warning-cleared", function (name) {
-      console.log("Network warning cleared: " + name + "\n");
-    });
-  }
+  //   call.on("warning-cleared", function (name) {
+  //     console.log("Network warning cleared: " + name + "\n");
+  //   });
+  // }
 
   //   async function requestMeeting() {
   //     console.log("triggering test meeting through test server");
@@ -389,26 +355,27 @@ export const VoxrayPhone = () => {
   //   reportCallEvent("request-run-" + numberOfCalls);
   // }
 
-  async function callTo(destination = undefined) {
-    // we should have already registered
-    if (myDevice === undefined) {
-      console.log("voice device not created yet");
-      return;
-    }
+  // async function callTo(destination = undefined) {
+  //   // we should have already registered
+  //   if (myDevice === undefined) {
+  //     console.log("voice device not created yet");
+  //     return;
+  //   }
 
-    if (destination !== undefined) {
-      console.log("calling " + destination + " ...");
-      // params = {'To': destination, 'agent': 'client:' + clientRole};
-      var params = { To: destination };
-      activeCall = await myDevice.connect({ params });
-    } else {
-      console.log("calling ...");
-      activeCall = await myDevice.connect();
-    }
+  //   if (destination !== undefined) {
+  //     console.log("calling " + destination + " ...");
+  //     // params = {'To': destination, 'agent': 'client:' + clientRole};
+  //     // var params = { To: destination };
+  //     var params = { To: destination, pk: "apartmentSearchUseCase" }; //pass in pk from template
+  //     activeCall = await myDevice.connect({ params });
+  //   } else {
+  //     console.log("calling ...");
+  //     activeCall = await myDevice.connect();
+  //   }
 
-    setupCallEventHandlers(activeCall);
-    audiovisualizer.analyze(activeCall);
-  }
+  //   setupCallEventHandlers(activeCall);
+  //   audiovisualizer.analyze(activeCall);
+  // }
 
   // function answer() {
   //   if (activeCall === undefined) {
@@ -418,93 +385,89 @@ export const VoxrayPhone = () => {
   //   activeCall.accept();
   // }
 
-  function disconnect() {
-    if (activeCall === undefined) {
-      console.log("call object not created yet");
-      return;
-    }
-    activeCall.disconnect();
-  }
+  // function disconnect() {
+  //   if (activeCall === undefined) {
+  //     console.log("call object not created yet");
+  //     return;
+  //   }
+  //   activeCall.disconnect();
+  // }
 
-  function createVoiceDevice() {
-    myDevice = new Device(voicetoken, {
-      logLevel: 1,
+  const createVoiceDevice = async () => {
+    const myDevice = await new Device(voicetoken, {
+      // logLevel: 1,
       codecPreferences: ["opus", "pcmu"],
     });
+    setDevice(myDevice);
+    myDevice.register();
     registerTwilioDeviceHandlers(myDevice);
-  }
+  };
 
-  function status(msg, log = true) {
-    let message;
-    if (log) {
-      console.log("message is ", msg);
-      if (msg.startsWith(`{"config"`) || msg.startsWith(`{"control":"set`)) {
-        return;
-      }
-    }
+  // function status(msg, log = true) {
+  //   let message;
+  //   if (log) {
+  //     console.log("message is ", msg);
+  //     if (msg.startsWith(`{"config"`) || msg.startsWith(`{"control":"set`)) {
+  //       return;
+  //     }
+  //   }
 
-    if (msg !== "") {
-      message = "[" + new Date().toLocaleTimeString() + "] " + msg + "\n";
-    } else {
-      // just add a blank line
-      message = "\n";
-    }
-    messageString += message;
-    setMessages(messageString);
-  }
+  //   if (msg !== "") {
+  //     message = "[" + new Date().toLocaleTimeString() + "] " + msg + "\n";
+  //   } else {
+  //     // just add a blank line
+  //     message = "\n";
+  //   }
+  //   messageString += message;
+  //   setMessages(messageString);
+  // }
 
-  function updateCallButton(newText, disabled) {
-    //   const callButton = document.getElementById("call-button");
-    //   if (newText) {
-    //     callButton.textContent = newText;
-    //   }
-    //   callButton.disabled = disabled;
-  }
+  // function updateCallButton(newText, disabled) {
+  //   //   const callButton = document.getElementById("call-button");
+  //   //   if (newText) {
+  //   //     callButton.textContent = newText;
+  //   //   }
+  //   //   callButton.disabled = disabled;
+  // }
 
-  function updateDisconnectButton(newText, disabled) {
-    //   const disconnectButton = document.getElementById("disconnect-button");
-    //   if (newText) {
-    //     disconnectButton.textContent = newText;
-    //   }
-    //   disconnectButton.disabled = disabled;
-  }
+  // function updateDisconnectButton(newText, disabled) {
+  //   //   const disconnectButton = document.getElementById("disconnect-button");
+  //   //   if (newText) {
+  //   //     disconnectButton.textContent = newText;
+  //   //   }
+  //   //   disconnectButton.disabled = disabled;
+  // }
 
-  function updateRegistrationButton(disabled) {
-    //   const registrationButton = document.getElementById("registration-button");
-    //   registrationButton.disabled = disabled;
-  }
+  // function updateRegistrationButton(disabled) {
+  //   //   const registrationButton = document.getElementById("registration-button");
+  //   //   registrationButton.disabled = disabled;
+  // }
 
   useEffect(() => {
-    // runOnLoad();
-    // setRegistered(true);
+    runOnLoad();
   }, []);
 
-  const register = async (e) => {
-    e.preventDefault();
-    runOnLoad(); //this is when socket is setup so we need to start setmessages here
-    setRegistered(true);
-  };
+  // const register = async (e) => {
+  //   e.preventDefault();
+  //   runOnLoad(); //this is when socket is setup so we need to start setmessages here
+  // };
 
-  const makeCall = (e) => {
-    e.preventDefault();
-    callTo("test:conversationRelay");
-  };
+  // const makeCall = (e) => {
+  //   e.preventDefault();
+  //   callTo("test:conversationRelay");
+  // };
 
-  const hangupCall = (e) => {
-    e.preventDefault();
-    disconnect();
-  };
+  // const hangupCall = (e) => {
+  //   e.preventDefault();
+  //   disconnect();
+  // };
 
   return (
     <Theme.Provider theme="Twilio">
-      <Box paddingX="space100"></Box>
       <Box paddingX="space100">
         <Theme.Provider theme="Twilio">
           <Box display="flex" flexDirection="column">
-            <Box padding="space50">
-              <Heading as="h2" variant="heading20">
-                ConversationRelay Test Client
-              </Heading>
+            {/* <Box padding="space50">
               <Stack orientation="horizontal" spacing="space60">
                 {!registered ? (
                   <Button onClick={register} variant="primary">
@@ -515,38 +478,22 @@ export const VoxrayPhone = () => {
                     Registered
                   </Button>
                 )}
-                {!registered ? (
-                  <Button onClick={makeCall} variant="secondary">
-                    Call
-                  </Button>
-                ) : (
-                  <Button onClick={makeCall} variant="primary">
-                    Call
-                  </Button>
-                )}
-                {!registered ? (
-                  <Button onClick={hangupCall} variant="destructive_secondary">
-                    Cancel
-                  </Button>
-                ) : (
-                  <Button onClick={hangupCall} variant="destructive_secondary">
-                    Disconnect
-                  </Button>
-                )}
               </Stack>
-            </Box>
-
+            </Box> */}
             <Box padding="space50">
+              <Heading as="h2" variant="heading20">
+                ConversationRelay Test Client
+              </Heading>
               {/* Would only be important if calling in from PSTN? - how does client know which use case / configuration to use when calling */}
               {/* <Label>Profile</Label>
               <Profile /> */}
-              <Label>Configuration</Label>
-              <Configuration />
+              <Label>Agent Use Cases</Label>
+              <Configuration device={device} />
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
-              <StatusArea status={messages} />
-              <ReactAudioVisualizer />
-              <Visualizer status={messages} />
+              {/* <StatusArea status={messages} /> */}
+              {/* <ReactAudioVisualizer /> */}
+              <Visualizer />
             </Box>
           </Box>
         </Theme.Provider>

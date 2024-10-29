@@ -4,7 +4,7 @@ import { TextArea, Box, Label } from "@twilio-paste/core";
 export function Visualizer(props) {
   const [ws, setWs] = useState(null);
   const [messages, setMessages] = useState("");
-  const [messageArr, setMessageArr] = useState([]);
+  // const [messageArr, setMessageArr] = useState([]);
   const textLog = useRef();
   let controlsocket;
 
@@ -14,6 +14,7 @@ export function Visualizer(props) {
     const socket = new WebSocket(
       " wss://8bs3g9ns29.execute-api.us-east-1.amazonaws.com/prod"
     ); //for dev we need to set up websocket
+    setWs(socket);
 
     socket.onopen = function (event) {
       console.log("WebSocket call opened:", event);
