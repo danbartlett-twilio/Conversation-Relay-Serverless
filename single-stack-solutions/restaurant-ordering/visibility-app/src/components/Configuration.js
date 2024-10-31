@@ -13,39 +13,32 @@ import {
   Option,
   TextArea,
   HelpText,
+  Spinner,
+  Stack,
+  Paragraph,
 } from "@twilio-paste/core";
 
+import { CallIcon } from "@twilio-paste/icons/esm/CallIcon";
+import { CallFailedIcon } from "@twilio-paste/icons/esm/CallFailedIcon";
+import { CloseIcon } from "@twilio-paste/icons/esm/CloseIcon";
+import { ChevronExpandIcon } from "@twilio-paste/icons/esm/ChevronExpandIcon";
+
+import UseCaseModal from "./UseCaseModal";
+import Loading from "./Loading";
 import setupCallEventHandlers from "../util/setupCallEventHandlers";
 import audiovisualizer from "../templates/audiovisualizer";
+import initialConfiguration from "../templates/initialConfiguration";
 
 let activeCall;
 
 export function Configuration(props) {
-  const myDevice = props.device;
-  const [config, setConfig] = useState([
-    {
-      pk: "",
-      pk1: "",
-      sk: "",
-      sk1: "",
-      conversationRelayParams: {
-        dtmfDetection: "",
-        interruptByDtmf: "",
-        ttsProvider: "",
-        voice: "",
-        welcomeGreeting: "",
-      },
-      dtmfHandlers: "",
-      prompt: "",
-      title: "",
-      description: "",
-      tools: "",
-    },
-  ]);
+  // const myDevice = props.device;
+  const [loading, setLoading] = useState(true);
+  const [config, setConfig] = useState(initialConfiguration.array);
 
   async function callTo() {
     // we should have already registered
-    if (myDevice === undefined) {
+    if (props.device === undefined) {
       console.log("voice device not created yet");
       return;
     }
@@ -55,7 +48,12 @@ export function Configuration(props) {
       useCaseTitle: config[template].pk,
     }; //pass in pk from template
     // var params = { To: "test:conversationRelay" }; //pass in pk from template - this is causing some issue for some reason
-    activeCall = await myDevice.connect({ params });
+
+    // we should handle this in function call to parent
+    // activeCall = await props.handleDeviceConnect({ params });
+    activeCall = await props.device.connect({ params });
+
+    console.log(activeCall);
 
     setupCallEventHandlers(activeCall);
     audiovisualizer.analyze(activeCall);
@@ -77,7 +75,7 @@ export function Configuration(props) {
   const [ttsProvider, setTtsProvider] = useState("amazon");
   const [voice, setVoice] = useState([]);
   const voiceOptions = {
-    google: ["en-US-Neural2-F", "en-US-Neural2-A", "en-US-Journey-O"],
+    google: ["en-US-Journey-D", "en-US-Journey-O"],
     amazon: ["Amy-Generative", "Matthew-Generative"],
   };
   const [transcriptionProvider, setTranscriptionProvider] = useState("");
@@ -86,6 +84,9 @@ export function Configuration(props) {
   const [dtmfDetection, setDtmfDetection] = useState("true");
   const [interruptible, setInterruptible] = useState("true");
   const [aiModel, setAimodel] = useState("gpt-4o");
+
+  // Data modal
+  const [isOpen, setIsOpen] = useState(false);
 
   const useCaseURL =
     "https://8ldhh8emwh.execute-api.us-east-1.amazonaws.com/get-use-cases";
@@ -97,6 +98,7 @@ export function Configuration(props) {
       setVoice(
         voiceOptions[config.data.Items[0].conversationRelayParams.ttsProvider]
       );
+      setLoading(false);
     } catch (e) {
       console.log(e);
     }
@@ -118,6 +120,8 @@ export function Configuration(props) {
   };
 
   const updateConfig = async (e) => {
+    setIsOpen(true);
+    setLoading(true);
     e.preventDefault();
     console.log(config[template]);
 
@@ -132,10 +136,30 @@ export function Configuration(props) {
     try {
       const res = await axios.post(updateURL, data, headers);
       console.log(res);
-      alert("Updated!");
+      setLoading(false);
+      // setIsOpen(false);
     } catch (e) {
       console.log("Error", e);
     }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  const resetDemo = () => {
+    console.log("init array", initialConfiguration.array);
+    setConfig(initialConfiguration.array);
+    setTtsProvider(
+      initialConfiguration.array[0].conversationRelayParams.ttsProvider
+    );
+    setVoice(
+      voiceOptions[
+        initialConfiguration.array[0].conversationRelayParams.ttsProvider
+      ]
+    );
+    console.log(config);
+    // updateConfig();
   };
 
   useEffect(() => {
@@ -144,6 +168,27 @@ export function Configuration(props) {
 
   return (
     <div>
+      {loading ? (
+        <div>
+          <Spinner size="sizeIcon110" decorative={false} title="Loading" />
+        </div>
+      ) : (
+        <div></div>
+      )}
+      <Paragraph>
+        <Button onClick={resetDemo} variant="secondary">
+          Reset Configuration Values
+        </Button>
+      </Paragraph>
+      {/* <UseCaseModal /> */}
+      <Loading
+        isOpen={isOpen}
+        isLoading={loading}
+        handleClose={handleClose}
+        loadingMessage={"Loading"}
+        successMessage={"Updated!"}
+      />
+
       <Select
         id={"template"}
         value={template}
@@ -158,15 +203,35 @@ export function Configuration(props) {
 
       <Grid gutter="space30" vertical>
         <Column>
-          <Form></Form>
-          <Button onClick={showOrHideAgentSettings} variant="secondary">
-            Show/Hide
-          </Button>
+          <Form>
+            <Button onClick={showOrHideAgentSettings} variant="secondary">
+              Show/Hide
+              <ChevronExpandIcon
+                decorative={false}
+                title="Description of icon"
+              />
+              {loading ? (
+                <div>
+                  <Stack orientation="horizontal" spacing="space30">
+                    <Spinner
+                      size="sizeIcon110"
+                      decorative={false}
+                      title="Loading"
+                    />
+                  </Stack>
+                </div>
+              ) : (
+                <div></div>
+              )}
+            </Button>
+          </Form>
           <Button onClick={callTo} variant="primary">
-            Make Call
+            Call <CallIcon decorative={false} title="make call" />
           </Button>
-          <Button onClick={hangupCall} variant="destructive_secondary">
+          <Button onClick={hangupCall} variant="destructive">
             Disconnect
+            <CallFailedIcon decorative={false} title="Description of icon" />
+            {/* <CloseIcon decorative={false} title="Description of icon" /> */}
           </Button>
         </Column>
         <Column>
@@ -392,7 +457,7 @@ export function Configuration(props) {
                         ))}
                       </Select>
                     </FormControl>
-                    <FormControl>
+                    {/* <FormControl>
                       <Label htmlFor="aiModel" required>
                         AI Model
                       </Label>
@@ -404,7 +469,7 @@ export function Configuration(props) {
                       >
                         <Option value="gpt-4o">gpt-4o</Option>
                       </Select>
-                    </FormControl>
+                    </FormControl> */}
                     <FormControl>
                       <Label htmlFor="prompt" required>
                         Agent Persona

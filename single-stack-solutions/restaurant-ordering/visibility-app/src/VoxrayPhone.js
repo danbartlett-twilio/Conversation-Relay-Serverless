@@ -177,23 +177,16 @@ export const VoxrayPhone = () => {
           conn.parameters.CallSid +
           ""
       );
-      console.log("incoming");
       // activeCall = conn;
       // setupCallEventHandlers(activeCall);
     });
 
     device.on("registered", (dev) => {
       console.log("Device ready to receive incoming calls\n");
-      // updateRegistrationButton(true);
-      // updateCallButton("Call", false);
-      // updateDisconnectButton("Disconnect", true);
     });
 
     device.on("unregistered", (dev) => {
       console.log("Device unregistered\n");
-      // updateRegistrationButton(false);
-      // updateCallButton("Call", true);
-      // updateDisconnectButton("Disconnect", false);
     });
 
     device.on("tokenWillExpire", (dev) => {
@@ -395,13 +388,25 @@ export const VoxrayPhone = () => {
 
   const createVoiceDevice = async () => {
     const myDevice = await new Device(voicetoken, {
-      // logLevel: 1,
+      logLevel: 4, // 5 disables all logs
+      // chunderw: "chunderw-vpc-gll.twilio.com",
+      // region: "prod-us1",
+      // eventgw: "eventgw.twilio.com",
       codecPreferences: ["opus", "pcmu"],
     });
     setDevice(myDevice);
     myDevice.register();
     registerTwilioDeviceHandlers(myDevice);
+    console.log(myDevice);
   };
+
+  // const handleDeviceConnect = async (params) => {
+  //   console.log("handling device connect for params", params);
+  //   const activeCall = await device.connect(params);
+  //   console.log(device); //activeCall is null?
+  //   console.log(activeCall);
+  //   return activeCall;
+  // };
 
   // function status(msg, log = true) {
   //   let message;
@@ -488,7 +493,10 @@ export const VoxrayPhone = () => {
               {/* <Label>Profile</Label>
               <Profile /> */}
               <Label>Agent Use Cases</Label>
-              <Configuration device={device} />
+              <Configuration
+                device={device}
+                // handleDeviceConnect={handleDeviceConnect}
+              />
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
               {/* <StatusArea status={messages} /> */}

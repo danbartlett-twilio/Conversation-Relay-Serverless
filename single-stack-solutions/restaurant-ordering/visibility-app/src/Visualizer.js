@@ -13,6 +13,7 @@ export function Visualizer(props) {
     // const socket = new WebSocket("ws://localhost:3000/client");
     const socket = new WebSocket(
       " wss://8bs3g9ns29.execute-api.us-east-1.amazonaws.com/prod"
+      // "wss://a1jj9krs1b.execute-api.us-east-1.amazonaws.com/prod/"
     ); //for dev we need to set up websocket
     setWs(socket);
 

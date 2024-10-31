@@ -5,7 +5,7 @@ function setupCallEventHandlers(call) {
   }
 
   call.on("ringing", function (hasEarlyMedia) {
-    console.log("Call ringing");
+    console.log("Call ringing now");
     if (hasEarlyMedia) {
       console.log("Has early media");
     }

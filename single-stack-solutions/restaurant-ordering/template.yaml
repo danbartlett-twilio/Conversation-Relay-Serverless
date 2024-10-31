@@ -617,10 +617,9 @@ Resources:
           Properties:
             Path: /get-use-cases
             Method: ANY
-            ApiId:
-              !Ref GetUseCasesAPI
+            ApiId: !Ref GetUseCasesAPI
 
-              ######################################################
+  ######################################################
   # UpdateUseCases  =>
   ######################################################
   UpdateUseCasesFunction:
@@ -945,6 +944,23 @@ Outputs:
         ],
       ]
     Description: Name of S3 bucket to hold website content
+  # CRWebSocketApi:
+  #   Description: "ARN to the Web Socket API Gateway"
+  #   Value: !Ref CRWebSocketApi
+  # CRWebSocketURL:
+    Description: "The WSS Protocol URL to connect to"
+    Value:
+      !Join [
+        "",
+        [
+          "wss://",
+          !Ref CRWebSocketApi,
+          ".execute-api.",
+          !Ref "AWS::Region",
+          ".amazonaws.com/",
+          !Ref "Stage",
+        ],
+      ]
   UIWebSocketApi:
     Description: "ARN to the Web Socket API Gateway"
     Value: !Ref UIWebSocketApi
