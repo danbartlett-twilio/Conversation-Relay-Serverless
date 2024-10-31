@@ -22,6 +22,7 @@ let activeCall;
 
 export function Configuration(props) {
   const myDevice = props.device;
+  const websocketId = props.websocketId;
   const [config, setConfig] = useState([
     {
       pk: "",
@@ -50,9 +51,11 @@ export function Configuration(props) {
       return;
     }
 
+    console.log("websocketID is: " +websocketId);
     var params = {
       To: "test:conversationRelay",
       useCaseTitle: config[template].pk,
+      uiwebsocketId: websocketId,
     }; //pass in pk from template
     // var params = { To: "test:conversationRelay" }; //pass in pk from template - this is causing some issue for some reason
     activeCall = await myDevice.connect({ params });

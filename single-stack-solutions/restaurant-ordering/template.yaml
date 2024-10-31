@@ -298,6 +298,7 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${CRWebSocketApi}/*"
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
             - Effect: Allow
               Action:
                 - "sns:Publish"
