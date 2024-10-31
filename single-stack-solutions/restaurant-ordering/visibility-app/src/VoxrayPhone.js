@@ -26,12 +26,18 @@ let voicetoken;
 export const VoxrayPhone = () => {
   // const [messages, setMessages] = useState("");
   const [device, setDevice] = useState();
+  const [websocketId, setWebsocketId] = useState("");
 
   async function runOnLoad() {
     // myDevice = undefined;
     // activeCall = undefined;
     registerVoiceClient();
     audiovisualizer.setupAudioVisualizerCanvas();
+  }
+
+  function updateWebsocketId(newId) {
+    console.log("updating websocket ID to: " + newId);
+    setWebsocketId(newId);
   }
 
   // function getFromUrl(url) {
@@ -493,15 +499,12 @@ export const VoxrayPhone = () => {
               {/* <Label>Profile</Label>
               <Profile /> */}
               <Label>Agent Use Cases</Label>
-              <Configuration
-                device={device}
-                // handleDeviceConnect={handleDeviceConnect}
-              />
+              <Configuration device={device} websocketId={websocketId} />
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
               {/* <StatusArea status={messages} /> */}
               {/* <ReactAudioVisualizer /> */}
-              <Visualizer />
+              <Visualizer updateWebsocketId={updateWebsocketId} />
             </Box>
           </Box>
         </Theme.Provider>

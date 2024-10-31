@@ -45,9 +45,8 @@ export const lambdaHandler = async (event, context) => {
   let userContext = "";
   if (user.Item) {
     userContext = user.Item;
+    console.info("user.Item ==>\n" + JSON.stringify(user.Item, null, 2));
   }
-
-  console.info("user.Item ==>\n" + JSON.stringify(user.Item, null, 2));
 
   // 3) Determine use case and params to use
   // This is a single stack solution so the use case is determined
@@ -178,7 +177,9 @@ export const lambdaHandler = async (event, context) => {
 
     let twiml = `<?xml version="1.0" encoding="UTF-8"?><Response>    
     <Connect>
-        <ConversationRelay url="${ws_url}" ${conversationRelayParamsString} />
+        <ConversationRelay url="${ws_url}" ${conversationRelayParamsString}>
+            <Parameter name="uiConnId" value="${twilio_body?.uiwebsocketId}"/>
+        </ConversationRelay>
     </Connect>
 </Response>`;
 

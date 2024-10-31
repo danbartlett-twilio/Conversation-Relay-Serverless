@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { TextArea, Box, Label } from "@twilio-paste/core";
 
-export function Visualizer(props) {
+export function Visualizer({updateWebsocketId}) {
   const [ws, setWs] = useState(null);
   const [messages, setMessages] = useState("");
+  
   // const [messageArr, setMessageArr] = useState([]);
   const textLog = useRef();
   let controlsocket;
@@ -19,16 +20,16 @@ export function Visualizer(props) {
 
     socket.onopen = function (event) {
       console.log("WebSocket call opened:", event);
-      controlsocket = socket;
-      controlsocket.send(JSON.stringify("websocket opened")); //this is corretly firing the websocket
+      socket.send(JSON.stringify({"type": "setup"})); //this is corretly firing the websocket
     };
 
     socket.onmessage = function (event) {
-      // console.log("!!!! received event:", event);
+      console.log("!!!! received event:", event);
       let message;
       const data = JSON.parse(event.data);
 
       if (data.type === "setup") {
+        updateWebsocketId(data.token)
         message = "";
       }
       if (data.type === "info") {
@@ -44,7 +45,7 @@ export function Visualizer(props) {
         message = data.text + "\n";
       }
       if (data.type === "text") {
-        message = data.token;
+        message = data.token+ "\n";
       }
 
       setMessages((prev) => prev + message);

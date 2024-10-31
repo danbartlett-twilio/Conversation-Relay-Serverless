@@ -7,9 +7,14 @@
  */
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+} from "@aws-sdk/lib-dynamodb";
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
+import { replyToWS } from "./reply-to-ws.mjs";
 
 import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagementapi";
 
@@ -24,6 +29,9 @@ export const lambdaHandler = async (event, context) => {
   let connectionId = event.requestContext.connectionId;
   let ws_domain_name = event.requestContext.domainName;
   let ws_stage = event.requestContext.stage;
+  let ui_ws_domain_name =
+    process.env.UI_WS_API + ".execute-api.us-east-1.amazonaws.com";
+  let ui_ws_stage = "prod";
   let body = JSON.parse(event.body);
   let toolCallCompletion = false;
 
@@ -44,10 +52,13 @@ export const lambdaHandler = async (event, context) => {
     endpoint: `https://${ws_domain_name}/${ws_stage}`,
   });
 
+  let ui_messages = [];
+
   try {
     // Text prompts and dtmf events sent via WebSockets
     // and tool call completion events follow the same steps and call the LLM
     if (body?.type === "prompt" || body?.type === "dtmf") {
+      ui_messages.push({ type: "text", token: body?.voicePrompt });
       const llmResult = await prepareAndCallLLM({
         ddbDocClient: ddbDocClient,
         connectionId: connectionId,
@@ -67,6 +78,8 @@ export const lambdaHandler = async (event, context) => {
         content: llmResult.content,
         refusal: llmResult.refusal,
       };
+
+      ui_messages.push({ type: "text", token: llmResult.content });
 
       // If tool_calls are present, convert the tool call object to
       // an array to adhere to llm chat messaging format
@@ -156,6 +169,81 @@ export const lambdaHandler = async (event, context) => {
        */
       // PUT record
       // pk = event.requestContext.connectionId
+      console.log("uiConnID is: " + body.customParameters.uiConnId);
+      let putItem = {
+        pk: event.requestContext.connectionId,
+        sk: "uiConnection",
+        uiConnId: body.customParameters.uiConnId,
+      };
+
+      console.log(
+        "put new websocket conn and CR conn Item: " + JSON.stringify(putItem)
+      );
+      await ddbDocClient.send(
+        new PutCommand({
+          TableName: process.env.TABLE_NAME,
+          Item: putItem,
+        })
+      );
+      // sk = setup
+    } else if (body?.type === "end") {
+      /**
+       * "end" event is the last message sent by the ConversationRelay server. This
+       * message can be used for any "clean up" processing.
+       *
+       * {
+       *  "type" : "end",
+       *  "handoffData": "{\"reasonCode\":\"live-agent-handoff\", \"reason\": \"The caller wants to talk to a real person\"}"
+       * }
+       *
+       * This implementation does not use the end event.
+       */
+      // PUT record
+      // pk = event.requestContext.connectionId
+      // sk = end
+    } else if (body?.type === "interrupt") {
+      /**
+       * "interrupt" event sent by the ConversationRelay server when the user speaks
+       * before the text-to-speech has completed.
+       *
+       * {
+       *  "type" : "interrupt",
+       *  "utteranceUntilInterrupt": "Life is a complex set of",
+       *  "durationUntilInterruptMs": "460"
+       * }
+       *
+       * This implementation does not track interruptions.
+       *
+       */
+      // PUT records
+      // pk = event.requestContext.connectionId
+      // sk = interrupt
+      // ts = unix timestamp
+    } else if (body?.type === "setup") {
+      /**
+       * "setup" event sent from ConversationRelay server as initial session message.
+       * This event can be used for additional configuration for this call.
+       *
+       * {
+       *  "type": "setup",
+       *  "sessionId": "VX8f1ae211b0404ab3905b4aa470bb9a36",
+       *  "callSid": "CA3327b12c071c64297e9ea5108e0a9b29",
+       *  "parentCallSid": null,
+       *  "from": "+14085551212",
+       *  "to": "+18881234567",
+       *  "forwardedFrom": null,
+       *  "callerName": null,
+       *  "direction": "inbound",
+       *  "callType": "PSTN",
+       *  "callStatus": "IN-PROGRESS",
+       *  "accountSid": "ACe6ee4b20287adb6e5c9ec4169b56d2bb",
+       *  "applicationSid": "AP3c07638b2397e5e3f1e459fb1cc10000"
+       * }
+       *
+       * This implementation does utilize the setup event.
+       */
+      // PUT record
+      // pk = event.requestContext.connectionId
       // sk = setup
     } else if (body?.type === "end") {
       /**
@@ -173,14 +261,43 @@ export const lambdaHandler = async (event, context) => {
       // pk = event.requestContext.connectionId
       // sk = end
     }
+    const uiConnection = await ddbDocClient.send(
+      new GetCommand({
+        TableName: process.env.TABLE_NAME,
+        Key: { pk: connectionId, sk: "uiConnection" },
+      })
+    );
 
+    console.log("UI Connection item: " + JSON.stringify(uiConnection));
+
+    if (uiConnection != null) {
+      const ui_ws_client = new ApiGatewayManagementApiClient({
+        endpoint: `https://${ui_ws_domain_name}/${ui_ws_stage}`,
+      });
+      console.log(
+        "about to send these messages down the ui websocket: " +
+          JSON.stringify(ui_messages)
+      );
+      sendMessages(ui_messages, ui_ws_client, uiConnection.Item.uiConnId);
+    }
     return { statusCode: 200, body: "Completed." };
   } catch (error) {
     console.log("Default Route app.js generated an error => ", error);
-
     return {
       statusCode: 500,
       body: "Default app.js generated an error: " + JSON.stringify(error),
     };
   }
 };
+
+async function sendMessages(array, ws_client, connId) {
+  for (const item of array) {
+    console.log(
+      "sending message: " +
+        JSON.stringify(item) +
+        "\nto ui websocket with connId: " +
+        connId
+    );
+    await replyToWS(ws_client, connId, item);
+  }
+}
