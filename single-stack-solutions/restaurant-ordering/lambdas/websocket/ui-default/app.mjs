@@ -8,7 +8,6 @@
 import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagementapi";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 
-
 export const lambdaHandler = async (event, context) => {
   console.info("EVENT\n" + JSON.stringify(event, null, 2));
 
@@ -18,20 +17,21 @@ export const lambdaHandler = async (event, context) => {
   let ws_stage = event.requestContext.stage;
   let toolCallCompletion = false;
 
-
   try {
     if (body?.type === "setup") {
       const ws_client = new ApiGatewayManagementApiClient({
         endpoint: `https://${ws_domain_name}/${ws_stage}`,
       });
 
-      console.log("websocket endpoint: " + `https://${ws_domain_name}/${ws_stage}`);
+      console.log(
+        "websocket endpoint:  " + `https://${ws_domain_name}/${ws_stage}`
+      );
 
       let setupMessage = {
         type: "setup",
         token: connectionId,
       };
-      console.log("sending setupMessage: " + JSON.stringify(setupMessage))
+      console.log("sending setupMessage: " + JSON.stringify(setupMessage));
       await ws_client.send(
         new PostToConnectionCommand({
           Data: Buffer.from(JSON.stringify(setupMessage)),

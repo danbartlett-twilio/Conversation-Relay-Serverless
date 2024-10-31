@@ -202,6 +202,71 @@ Resources:
           Properties:
             Topic: !Ref TwilioSendEmailTopic
 
+  ##########################################################################
+  #  Setup for UI Websocket API & Lambda Function
+  ##########################################################################
+
+  # UI Websocket API
+  UIWebSocketApi:
+    Type: "AWS::ApiGatewayV2::Api"
+    Properties:
+      Name: !Sub "${AWS::StackName}-UIWebSocketApi"
+      Description: Websocket API between Backend and UI
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+
+  # UI OnConnectLambda
+  UIOnConnectLambdaFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-ui-onconnect-function"
+      Description: Lambda to handle connection to websocket api
+      CodeUri: lambdas/websocket/ui-onconnect/
+      Handler: app.lambdaHandler
+      AutoPublishAlias: live
+      Runtime: nodejs20.x
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PrimaryDynamoDBTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PrimaryDynamoDBTable
+
+  # Function permissions grant an AWS service or another account permission to use a function
+  UIOnConnectFunctionResourcePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref UIOnConnectLambdaFunction
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
+  UIOnConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      Description: UIOnConnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIOnConnectLambdaFunction.Arn}/invocations
+  UIOnConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref UIWebSocketApi
+      RouteKey: $connect
+      AuthorizationType: NONE
+      OperationName: UIOnConnectRoute
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref UIOnConnectIntegration
+
+  ##########################################################################
+  #  Setup for Websocket API & Lambda Function
+  ##########################################################################
+
   # Websocket API
   CRWebSocketApi:
     Type: "AWS::ApiGatewayV2::Api"
@@ -276,6 +341,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref PrimaryDynamoDBTable
+          UI_WS_API: !Ref UIWebSocketApi
           # DO NOT STORE VALUES LIKE THIS IN CODE!...
           # OPENAI_API_KEY: "YOUR-OPENAI-API-KEY"
           # Use a secure method for production such as
@@ -711,63 +777,6 @@ Resources:
             Path: /get-calls/{phone}
             Method: get
             ApiId: !Ref GetCallsAPI
-
-  # Websocket API
-  UIWebSocketApi:
-    Type: "AWS::ApiGatewayV2::Api"
-    Properties:
-      Name: !Sub "${AWS::StackName}-UIWebSocketApi"
-      Description: Websocket API between Backend and UI
-      ProtocolType: WEBSOCKET
-      RouteSelectionExpression: "$request.body.action"
-
-  # OnConnectLambda
-  UIOnConnectLambdaFunction:
-    Type: "AWS::Serverless::Function"
-    Properties:
-      FunctionName: !Sub "${AWS::StackName}-ui-onconnect-function"
-      Description: Lambda to handle connection to websocket api
-      CodeUri: lambdas/websocket/ui-onconnect/
-      Handler: app.lambdaHandler
-      AutoPublishAlias: live
-      Runtime: nodejs20.x
-      Architectures:
-        - arm64
-      MemorySize: 128
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref PrimaryDynamoDBTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref PrimaryDynamoDBTable
-
-  # Function permissions grant an AWS service or another account permission to use a function
-  UIOnConnectFunctionResourcePermission:
-    Type: "AWS::Lambda::Permission"
-    Properties:
-      Action: "lambda:InvokeFunction"
-      Principal: apigateway.amazonaws.com
-      FunctionName: !Ref UIOnConnectLambdaFunction
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${UIWebSocketApi}/*"
-  UIOnConnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref UIWebSocketApi
-      Description: UIOnConnect Integration
-      IntegrationType: AWS_PROXY
-      IntegrationUri:
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UIOnConnectLambdaFunction.Arn}/invocations
-  UIOnConnectRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref UIWebSocketApi
-      RouteKey: $connect
-      AuthorizationType: NONE
-      OperationName: UIOnConnectRoute
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref UIOnConnectIntegration
 
   # Default Lambda
   UIDefaultWSLambdaFunction:

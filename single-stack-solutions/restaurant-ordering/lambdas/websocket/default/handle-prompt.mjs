@@ -22,7 +22,7 @@ export async function handlePrompt(promptObj) {
     stream: true,
   };
 
-  console.log("prompt is", prompt);
+  console.log("prompt is ", prompt);
 
   let tool_choice = promptObj?.tool_choice ? promptObj?.tool_choice : "auto";
   // tool_choice can be string or object
