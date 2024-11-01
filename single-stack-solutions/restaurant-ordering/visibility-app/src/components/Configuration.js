@@ -116,6 +116,10 @@ export function Configuration(props) {
     setConfig(updatedConfig);
   };
 
+  const handleVoiceUpdate = (updateVoiceOptions) => {
+    setVoice(updateVoiceOptions);
+  };
+
   const handleTemplateChange = (e) => {
     setShowAgentSettings(true);
     setTemplate(e.target.value);
@@ -205,6 +209,7 @@ export function Configuration(props) {
         config={config}
         voice={voice}
         handleConfigUpdate={handleConfigUpdate}
+        handleVoiceUpdate={handleVoiceUpdate}
         // websocketId={websocketId}
         // device={device}
       />

@@ -63,6 +63,7 @@ export function UseCasePicker(props) {
         handleOpen={handleOpen}
         handleClose={handleClose}
         handleConfigUpdate={props.handleConfigUpdate}
+        handleVoiceUpdate={props.handleVoiceUpdate}
       />
       <VisualPickerRadioGroup
         legend="Select Use Case"

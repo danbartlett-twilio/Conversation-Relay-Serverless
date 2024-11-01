@@ -37,6 +37,7 @@ export function UseCaseModal(props) {
   const voice = props.voice;
   const isOpen = props.isOpen;
   const handleConfigUpdate = props.handleConfigUpdate;
+  const handleVoiceUpdate = props.handleVoiceUpdate;
 
   const handleUpdate = async (e) => {
     // setIsOpen(true);
@@ -132,7 +133,8 @@ export function UseCaseModal(props) {
                     ].conversationRelayParams.ttsProvider = e.target.value;
                     updatedConfig[template].conversationRelayParams.voice =
                       voiceOptions[e.target.value][0];
-                    // setConfig(updatedConfig);
+                    handleConfigUpdate(updatedConfig);
+                    handleVoiceUpdate(voiceOptions[e.target.value]);
                     // setTtsProvider(e.target.value);
                     // setVoice(voiceOptions[e.target.value]);
                   }}
@@ -151,9 +153,8 @@ export function UseCaseModal(props) {
                     value={config[template].conversationRelayParams.voice}
                     onChange={(e) => {
                       const updatedConfig = [...config];
-                      updatedConfig[
-                        template
-                      ].conversationRelayParams.ttsProvider = e.target.value;
+                      updatedConfig[template].conversationRelayParams.voice =
+                        e.target.value;
                       handleConfigUpdate(updatedConfig);
                     }}
                   >
