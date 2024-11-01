@@ -4,9 +4,7 @@ import { TextArea, Box, Label } from "@twilio-paste/core";
 export function Visualizer({ updateWebsocketId }) {
   const [ws, setWs] = useState(null);
   const [messages, setMessages] = useState("");
-
-  // const [messageArr, setMessageArr] = useState([]);
-  const textLog = useRef();
+  const textLog = useRef(null);
   let controlsocket;
 
   function setupWebsockToController() {
@@ -38,28 +36,20 @@ export function Visualizer({ updateWebsocketId }) {
       if (data.type === "interrupt") {
         message = JSON.stringify(data) + "\n";
       }
-      if (data.type === "prompt") {
+      if (data.type === "prompt" && data.voicePrompt !== "undefined") {
         // User
-        if (data.last === true) {
-          message = "\n";
-        } else {
-          message = data.voicePrompt;
-        }
+        message = data.voicePrompt;
       }
-      if (data.type === "text") {
+      if (data.type === "text" && data.token !== "undefined") {
         // Agent
         if (data.last === true) {
           message = "\n";
         } else {
           message = data.token;
         }
-        if (data.type === "functionCall") {
-          if (data.last === true) {
-            message = "\n";
-          } else {
-            message = data.text;
-          }
-        }
+      }
+      if (data.type === "functionCall") {
+        message = "\n";
       }
 
       setMessages((prev) => prev + message);
@@ -85,7 +75,7 @@ export function Visualizer({ updateWebsocketId }) {
     } else {
       textLog.current.scrollTop = textLog.current.scrollHeight;
     }
-  }, []);
+  }, [messages]);
 
   return (
     <Box>
@@ -98,7 +88,7 @@ export function Visualizer({ updateWebsocketId }) {
         name="statusArea"
         value={messages}
         ref={textLog}
-        maxRows="15"
+        maxRows="5"
         readOnly
         style={{
           overflowY: "auto", // Enable vertical scrolling
