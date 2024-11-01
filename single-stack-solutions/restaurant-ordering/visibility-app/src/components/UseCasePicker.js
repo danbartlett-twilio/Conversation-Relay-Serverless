@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 import {
   VisualPickerRadioGroup,
@@ -17,53 +18,121 @@ import {
   MediaBody,
 } from "@twilio-paste/core";
 import { CallIcon } from "@twilio-paste/icons/esm/CallIcon";
+import { CallFailedIcon } from "@twilio-paste/icons/esm/CallFailedIcon";
 
 import UseCaseModal from "./UseCaseModal";
+import setupCallEventHandlers from "../util/setupCallEventHandlers";
+import audiovisualizer from "../templates/audiovisualizer";
+import initialConfiguration from "../templates/initialConfiguration";
+
+let activeCall;
 
 export function UseCasePicker(props) {
   const [template, setTemplate] = useState("0");
   const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState(initialConfiguration.array);
+
+  const websocketId = props.websocketId;
+  const device = props.device;
+
+  const [voice, setVoice] = useState([]);
+  const voiceOptions = {
+    google: [
+      "en-US-Journey-D",
+      "en-US-Journey-O",
+      "fr-FR-Journey-F",
+      "es-US-Journey-D",
+    ],
+    amazon: ["Amy-Generative", "Matthew-Generative"],
+  };
 
   const handleOpen = () => setIsOpen(true);
   const handleClose = () => setIsOpen(false);
-
-  const handleConfigure = () => {
+  const handleConfigure = (e) => {
     setIsOpen(true);
   };
+  const handleConfigUpdate = (updatedConfig) => setConfig(updatedConfig);
+  const handleVoiceUpdate = (updatedVoiceOptions) =>
+    setVoice(updatedVoiceOptions);
 
   async function callTo() {
     console.log("template is", template);
-    // // we should have already registered
-    // if (props.device === undefined) {
-    //   console.log("voice device not created yet");
-    //   return;
-    // }
-    // console.log("websocketID is: " + props.websocketId);
-    // var params = {
-    //   To: "test:conversationRelay",
-    //   useCaseTitle: config[template].pk, //think this is accurate already confirm
-    //   uiwebsocketId: props.websocketId,
-    // }; //pass in pk from template
-    // // var params = { To: "test:conversationRelay" }; //pass in pk from template - this is causing some issue for some reason
-    // // we should handle this in function call to parent
-    // // activeCall = await props.handleDeviceConnect({ params });
-    // activeCall = await props.device.connect({ params });
-    // console.log(activeCall);
-    // setupCallEventHandlers(activeCall);
-    // audiovisualizer.analyze(activeCall);
+    // we should have already registered
+    if (device === undefined) {
+      console.log("voice device not created yet");
+      return;
+    }
+    console.log("websocketID is: " + websocketId);
+    var params = {
+      To: "test:conversationRelay",
+      useCaseTitle: config[template].pk,
+      uiwebsocketId: websocketId,
+    };
+    activeCall = await device.connect({ params });
+    console.log(activeCall);
+    setupCallEventHandlers(activeCall);
+    audiovisualizer.analyze(activeCall);
   }
+
+  const hangupCall = (e) => {
+    e.preventDefault();
+    if (activeCall === undefined) {
+      console.log("call object not created yet");
+      return;
+    }
+    activeCall.disconnect();
+  };
+
+  const useCaseURL =
+    "https://8ldhh8emwh.execute-api.us-east-1.amazonaws.com/get-use-cases";
+
+  const getConfig = async (e) => {
+    try {
+      const config = await axios.get(useCaseURL);
+      setConfig(config.data.Items);
+      setVoice(
+        voiceOptions[
+          config.data.Items[template].conversationRelayParams.ttsProvider
+        ]
+      );
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const resetDemo = () => {
+    console.log("init array", initialConfiguration.array);
+    setConfig(initialConfiguration.array);
+    // setTtsProvider(
+    //   initialConfiguration.array[0].conversationRelayParams.ttsProvider
+    // );
+    // setVoice(
+    //   voiceOptions[
+    //     initialConfiguration.array[0].conversationRelayParams.ttsProvider
+    //   ]
+    // );
+    console.log(config);
+    // updateConfig();
+  };
+
+  useEffect(() => {
+    getConfig();
+  }, []);
 
   return (
     <div>
+      <Button onClick={resetDemo} variant="secondary">
+        Reset Configuration Values
+      </Button>
       <UseCaseModal
-        config={props.config}
+        config={config}
         template={template}
-        voice={props.voice}
+        voice={voice}
         isOpen={isOpen}
         handleOpen={handleOpen}
         handleClose={handleClose}
-        handleConfigUpdate={props.handleConfigUpdate}
-        handleVoiceUpdate={props.handleVoiceUpdate}
+        handleConfigUpdate={handleConfigUpdate}
+        handleVoiceUpdate={handleVoiceUpdate}
       />
       <VisualPickerRadioGroup
         legend="Select Use Case"
@@ -73,7 +142,7 @@ export function UseCasePicker(props) {
           setTemplate(newTemplate);
         }}
       >
-        {props.config.map((item, index) => (
+        {config.map((item, index) => (
           <VisualPickerRadio key={index} value={index.toString()}>
             <Box
               display="flex"
@@ -81,15 +150,7 @@ export function UseCasePicker(props) {
               alignItems="center"
             >
               <MediaObject verticalAlign="center">
-                <MediaFigure spacing="space50">
-                  {/* <Avatar
-                    variant="entity"
-                    icon={CodeIcon}
-                    size="sizeIcon90"
-                    name="code"
-                    color="decorative20"
-                  /> */}
-                </MediaFigure>
+                <MediaFigure spacing="space50"></MediaFigure>
                 <MediaBody>
                   <Text as="div" fontWeight="fontWeightSemibold">
                     {item.title}
@@ -114,18 +175,27 @@ export function UseCasePicker(props) {
                 </MediaObject>
               </Box>
               <Box display="flex" columnGap="space50">
-                {template ? (
+                {template === index.toString() ? (
                   <StatusBadge as="span" variant="ConnectivityAvailable">
                     Enabled
                   </StatusBadge>
                 ) : (
                   <StatusBadge as="span" variant="ConnectivityOffline">
-                    Offline
+                    Disabled
                   </StatusBadge>
                 )}
-                <Button onClick={handleConfigure}>Configure</Button>
+                <Button onClick={handleConfigure} variant="secondary">
+                  Configure
+                </Button>
                 <Button onClick={callTo} variant="primary">
                   Call <CallIcon decorative={false} title="make call" />
+                </Button>
+                <Button onClick={hangupCall} variant="destructive">
+                  Disconnect
+                  <CallFailedIcon
+                    decorative={false}
+                    title="Description of icon"
+                  />
                 </Button>
               </Box>
             </Box>

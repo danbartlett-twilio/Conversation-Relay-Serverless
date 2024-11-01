@@ -25,10 +25,17 @@ import {
   Spinner,
 } from "@twilio-paste/core";
 
+// To do create Toast component
+
 export function UseCaseModal(props) {
   // Define voice options
   const voiceOptions = {
-    google: ["en-US-Journey-D", "en-US-Journey-O"],
+    google: [
+      "en-US-Journey-D",
+      "en-US-Journey-O",
+      "fr-FR-Journey-F",
+      "es-US-Journey-D",
+    ],
     amazon: ["Amy-Generative", "Matthew-Generative"],
   };
 
@@ -115,8 +122,8 @@ export function UseCaseModal(props) {
                   }}
                 >
                   <Option value="en-US">en-US</Option>
-                  <Option value="fr">fr</Option>
-                  <Option value="es">es</Option>
+                  <Option value="fr-FR">fr-FR</Option>
+                  <Option value="es-US">es-US</Option>
                 </Select>
               </FormControl>
               <FormControl>
@@ -171,7 +178,7 @@ export function UseCaseModal(props) {
                   Transcription Provider
                 </Label>
                 <HelpText as="div" color="colorTextWeak">
-                  The provider for speech recognition
+                  The provider for Speech-to-Text
                 </HelpText>
                 <Select
                   value={

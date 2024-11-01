@@ -5,7 +5,7 @@ import "./styles/VoxrayPhone.css";
 // import StatusArea from "./StatusArea";
 // import Visualizer from "./Visualizer";
 // import Profile from "./components/DBProfile";
-import Configuration from "./components/Configuration";
+// import Configuration from "./components/Configuration";
 import audiovisualizer from "./templates/audiovisualizer";
 import Visualizer from "./Visualizer";
 // import ReactAudioVisualizer from "./ReactAudioVisualizer";
@@ -13,6 +13,8 @@ import Visualizer from "./Visualizer";
 // Twilio Paste
 import { Theme } from "@twilio-paste/core/theme";
 import { Box, Heading, Label } from "@twilio-paste/core";
+
+import UseCasePicker from "./components/UseCasePicker";
 
 // let myDevice;
 // let activeCall;
@@ -498,8 +500,7 @@ export const VoxrayPhone = () => {
               {/* Would only be important if calling in from PSTN? - how does client know which use case / configuration to use when calling */}
               {/* <Label>Profile</Label>
               <Profile /> */}
-              <Label>Agent Use Cases</Label>
-              <Configuration device={device} websocketId={websocketId} />
+              <UseCasePicker websocketId={websocketId} device={device} />
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
               {/* <StatusArea status={messages} /> */}
