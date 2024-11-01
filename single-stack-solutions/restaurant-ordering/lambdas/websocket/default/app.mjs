@@ -16,6 +16,16 @@ const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 import { replyToWS } from "./reply-to-ws.mjs";
 
+async function sendMessage(data, ws_client, connId) {
+  console.log(
+    "sending message: " +
+      JSON.stringify(data) +
+      "\nto ui websocket with connId: " +
+      connId
+  );
+  await replyToWS(ws_client, connId, data);
+}
+
 import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagementapi";
 
 // Code for this lambda broken into several modules
@@ -43,6 +53,7 @@ export const lambdaHandler = async (event, context) => {
       Key: { pk: connectionId, sk: "finalConnection" },
     })
   );
+  // we can get welcomegreeting from this
 
   console.log("call Connection item: " + JSON.stringify(callConnection));
   // Instantiate WebSocket client to return text to Twilio
@@ -52,17 +63,68 @@ export const lambdaHandler = async (event, context) => {
     endpoint: `https://${ws_domain_name}/${ws_stage}`,
   });
 
-  let ui_messages = [];
+  console.log(body);
+
+  if (body.type === "setup") {
+    console.log("uiConnID is: " + body.customParameters.uiConnId);
+    let putItem = {
+      pk: event.requestContext.connectionId,
+      sk: "uiConnection",
+      uiConnId: body.customParameters.uiConnId,
+    };
+
+    console.log(
+      "put new websocket conn and CR conn Item: " + JSON.stringify(putItem)
+    );
+    await ddbDocClient.send(
+      new PutCommand({
+        TableName: process.env.TABLE_NAME,
+        Item: putItem,
+      })
+    );
+  }
+
+  const uiConnection = await ddbDocClient.send(
+    new GetCommand({
+      TableName: process.env.TABLE_NAME,
+      Key: { pk: connectionId, sk: "uiConnection" },
+    })
+  );
+
+  console.log("UI Connection item: " + JSON.stringify(uiConnection));
+  let ui_ws_client;
+  if (uiConnection != null) {
+    ui_ws_client = new ApiGatewayManagementApiClient({
+      endpoint: `https://${ui_ws_domain_name}/${ui_ws_stage}`,
+    });
+    console.log(
+      "about to send these messages down the ui websocket: " +
+        JSON.stringify(body)
+    );
+    // send on initial greeting only
+    // let text = {
+    //   type: "text",
+    //   token: callConnection.Item?.welcomeGreeting,
+    // };
+    // sendMessage(text, ui_ws_client, uiConnection.Item?.uiConnId);
+    sendMessage(body, ui_ws_client, uiConnection.Item?.uiConnId);
+  }
+
+  // let ui_messages = [];
 
   try {
     // Text prompts and dtmf events sent via WebSockets
     // and tool call completion events follow the same steps and call the LLM
     if (body?.type === "prompt" || body?.type === "dtmf") {
-      ui_messages.push({ type: "text", token: body?.voicePrompt });
+      // ui_messages.push({ type: "text", token: body?.voicePrompt });
+
+      // adding ui_client
       const llmResult = await prepareAndCallLLM({
         ddbDocClient: ddbDocClient,
         connectionId: connectionId,
         callConnection: callConnection,
+        ui_ws_client: ui_ws_client,
+        uiConnection: uiConnection,
         ws_client: ws_client,
         ws_domain_name: ws_domain_name,
         ws_stage: ws_stage,
@@ -79,7 +141,7 @@ export const lambdaHandler = async (event, context) => {
         refusal: llmResult.refusal,
       };
 
-      ui_messages.push({ type: "text", token: llmResult.content });
+      // ui_messages.push({ type: "text", token: llmResult.content });
 
       // If tool_calls are present, convert the tool call object to
       // an array to adhere to llm chat messaging format
@@ -149,42 +211,42 @@ export const lambdaHandler = async (event, context) => {
        * "setup" event sent from ConversationRelay server as initial session message.
        * This event can be used for additional configuration for this call.
        *
-       * {
-       *  "type": "setup",
-       *  "sessionId": "VX8f1ae211b0404ab3905b4aa470bb9a36",
-       *  "callSid": "CA3327b12c071c64297e9ea5108e0a9b29",
-       *  "parentCallSid": null,
-       *  "from": "+14085551212",
-       *  "to": "+18881234567",
-       *  "forwardedFrom": null,
-       *  "callerName": null,
-       *  "direction": "inbound",
-       *  "callType": "PSTN",
-       *  "callStatus": "IN-PROGRESS",
-       *  "accountSid": "ACe6ee4b20287adb6e5c9ec4169b56d2bb",
-       *  "applicationSid": "AP3c07638b2397e5e3f1e459fb1cc10000"
-       * }
+      {
+  type: 'setup',
+  sessionId: 'VX30366d37a60bdef3f02c90aeb522cae1',
+  callSid: 'CAa9354d0485cfe9c7e7860beb9fef0fbd',
+  parentCallSid: '',
+  from: 'client:test:conversationRelay',
+  to: '',
+  forwardedFrom: '',
+  callerName: '',
+  direction: 'inbound',
+  callType: 'CLIENT',
+  callStatus: 'RINGING',
+  accountSid: 'AC1b58f346f06e46ec2646389fbf374f6c',
+  applicationSid: 'AP68e59f9156003438f1dc272ca09cc6fe',
+  customParameters: { uiConnId: 'Ak3wDfz7IAMCI3A=' }
+}
        *
        * This implementation does utilize the setup event.
        */
       // PUT record
       // pk = event.requestContext.connectionId
-      console.log("uiConnID is: " + body.customParameters.uiConnId);
-      let putItem = {
-        pk: event.requestContext.connectionId,
-        sk: "uiConnection",
-        uiConnId: body.customParameters.uiConnId,
-      };
-
-      console.log(
-        "put new websocket conn and CR conn Item: " + JSON.stringify(putItem)
-      );
-      await ddbDocClient.send(
-        new PutCommand({
-          TableName: process.env.TABLE_NAME,
-          Item: putItem,
-        })
-      );
+      // console.log("uiConnID is: " + body.customParameters.uiConnId);
+      // let putItem = {
+      //   pk: event.requestContext.connectionId,
+      //   sk: "uiConnection",
+      //   uiConnId: body.customParameters.uiConnId,
+      // };
+      // console.log(
+      //   "put new websocket conn and CR conn Item: " + JSON.stringify(putItem)
+      // );
+      // await ddbDocClient.send(
+      //   new PutCommand({
+      //     TableName: process.env.TABLE_NAME,
+      //     Item: putItem,
+      //   })
+      // );
       // sk = setup
     } else if (body?.type === "end") {
       /**
@@ -261,25 +323,25 @@ export const lambdaHandler = async (event, context) => {
       // pk = event.requestContext.connectionId
       // sk = end
     }
-    const uiConnection = await ddbDocClient.send(
-      new GetCommand({
-        TableName: process.env.TABLE_NAME,
-        Key: { pk: connectionId, sk: "uiConnection" },
-      })
-    );
+    // const uiConnection = await ddbDocClient.send(
+    //   new GetCommand({
+    //     TableName: process.env.TABLE_NAME,
+    //     Key: { pk: connectionId, sk: "uiConnection" },
+    //   })
+    // );
 
-    console.log("UI Connection item: " + JSON.stringify(uiConnection));
+    // console.log("UI Connection item: " + JSON.stringify(uiConnection));
 
-    if (uiConnection != null) {
-      const ui_ws_client = new ApiGatewayManagementApiClient({
-        endpoint: `https://${ui_ws_domain_name}/${ui_ws_stage}`,
-      });
-      console.log(
-        "about to send these messages down the ui websocket: " +
-          JSON.stringify(ui_messages)
-      );
-      sendMessages(ui_messages, ui_ws_client, uiConnection.Item.uiConnId);
-    }
+    // if (uiConnection != null) {
+    //   const ui_ws_client = new ApiGatewayManagementApiClient({
+    //     endpoint: `https://${ui_ws_domain_name}/${ui_ws_stage}`,
+    //   });
+    //   console.log(
+    //     "about to send these messages down the ui websocket: " +
+    //       JSON.stringify(ui_messages)
+    //   );
+    //   sendMessages(ui_messages, ui_ws_client, uiConnection.Item.uiConnId);
+    // }
     return { statusCode: 200, body: "Completed." };
   } catch (error) {
     console.log("Default Route app.js generated an error => ", error);
@@ -290,14 +352,14 @@ export const lambdaHandler = async (event, context) => {
   }
 };
 
-async function sendMessages(array, ws_client, connId) {
-  for (const item of array) {
-    console.log(
-      "sending message: " +
-        JSON.stringify(item) +
-        "\nto ui websocket with connId: " +
-        connId
-    );
-    await replyToWS(ws_client, connId, item);
-  }
-}
+// async function sendMessages(array, ws_client, connId) {
+//   for (const item of array) {
+//     console.log(
+//       "sending message: " +
+//         JSON.stringify(item) +
+//         "\nto ui websocket with connId: " +
+//         connId
+//     );
+//     await replyToWS(ws_client, connId, item);
+//   }
+// }

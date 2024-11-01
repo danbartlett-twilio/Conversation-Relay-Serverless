@@ -112,6 +112,7 @@ export const lambdaHandler = async (event, context) => {
       sk: "initialConnection",
       useCase: useCaseTitle,
       userContext: userContext,
+      // welcomeGreeting: useCase.Item.conversationRelayParams.welcomeGreeting,
       tools: tools, // tools passed into session -- can be changed dynamically.
       dtmfHandlers: dtmfHandlers, // dtmf handlers passed into session -- can be changed dynamically.
       expireAt: Math.floor(Date.now() / 1000) + 120, // Delete Record after 2 minutes

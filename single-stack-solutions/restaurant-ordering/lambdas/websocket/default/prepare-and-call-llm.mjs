@@ -141,9 +141,12 @@ export async function prepareAndCallLLM(prepareObj) {
   );
 
   // Call the LLM passing context and chat history
+  // adding ui_connection & client
   return await handlePrompt({
     ws_endpoint: `${prepareObj.ws_domain_name}/${prepareObj.ws_stage}`,
     ws_connectionId: prepareObj.connectionId,
+    ui_ws_client: prepareObj.ui_ws_client,
+    uiConnection: prepareObj.uiConnection,
     messages: messages,
     callConnection: prepareObj.callConnection.Item,
     toolCallCompletion: prepareObj.toolCallCompletion,

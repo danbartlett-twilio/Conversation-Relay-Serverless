@@ -21,28 +21,45 @@ export function Visualizer({ updateWebsocketId }) {
     };
 
     socket.onmessage = function (event) {
-      console.log("!!!! received event:", event);
       let message;
       const data = JSON.parse(event.data);
+      console.log(data);
 
       if (data.type === "setup") {
         updateWebsocketId(data.token);
-        message = "Connected to ConversationRelay Websocket\n";
+        message = "";
+      }
+      if (data.type === "error") {
+        message = data.description;
       }
       if (data.type === "info") {
         message = JSON.stringify(data) + "\n";
       }
       if (data.type === "interrupt") {
-        message = "\n" + JSON.stringify(data) + "\n";
+        message = JSON.stringify(data) + "\n";
       }
       if (data.type === "prompt") {
-        message = data.voicePrompt + "\n";
-      }
-      if (data.type === "functionCall") {
-        message = data.text + "\n";
+        // User
+        if (data.last === true) {
+          message = "\n";
+        } else {
+          message = data.voicePrompt;
+        }
       }
       if (data.type === "text") {
-        message = data.token + "\n";
+        // Agent
+        if (data.last === true) {
+          message = "\n";
+        } else {
+          message = data.token;
+        }
+        if (data.type === "functionCall") {
+          if (data.last === true) {
+            message = "\n";
+          } else {
+            message = data.text;
+          }
+        }
       }
 
       setMessages((prev) => prev + message);

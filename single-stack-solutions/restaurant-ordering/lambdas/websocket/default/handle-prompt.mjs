@@ -45,6 +45,8 @@ export async function handlePrompt(promptObj) {
   // Declare WebSocket client to return text to Twilio
   // Client is instantiated in parent lambda.
   const ws_client = promptObj.ws_client;
+  const ui_ws_client = promptObj.ui_ws_client;
+  const uiConnection = promptObj.uiConnection;
 
   let currentToolCallId = null; // Needed to support multiple tool calls
 
@@ -86,6 +88,21 @@ export async function handlePrompt(promptObj) {
         currentToolCallId = currentToolCall.id;
       }
 
+      console.log(currentToolCall);
+
+      // add ui-client here
+      // await ui_ws_client.send(
+      //   new PostToConnectionCommand({
+      //     Data: Buffer.from(
+      //       JSON.stringify({
+      //         type: "functionCall",
+      //         text: `Detected new tool call: ${currentToolCall?.function?.name}`,
+      //       })
+      //     ),
+      //     ConnectionId: uiConnection,
+      //   })
+      // );
+
       // Add an object for tool call the first time we see it
       if (!returnObj.tool_calls[currentToolCall.id]) {
         returnObj.tool_calls[currentToolCall.id] = {
@@ -104,6 +121,23 @@ export async function handlePrompt(promptObj) {
         returnObj.tool_calls[currentToolCallId].function.arguments =
           returnObj.tool_calls[currentToolCallId].function.arguments +
           currentToolCall.function.arguments;
+
+        // add ui-client here
+        // await ui_ws_client.send(
+        //   new PostToConnectionCommand({
+        //     Data: Buffer.from(
+        //       JSON.stringify({
+        //         type: "functionCall",
+        //         text: `Detected new tool call: ${
+        //           currentToolCall.function?.name
+        //         } with arguments: ${JSON.stringify(
+        //           currentToolCall.function.arguments
+        //         )}`,
+        //       })
+        //     ),
+        //     ConnectionId: uiConnection,
+        //   })
+        // );
       }
 
       // finish_reason should be "tool_calls"
@@ -126,6 +160,21 @@ export async function handlePrompt(promptObj) {
             })
           ),
           ConnectionId: promptObj.ws_connectionId,
+        })
+      );
+
+      console.log(ui_ws_client);
+      // add ui-client here
+      await ui_ws_client.send(
+        new PostToConnectionCommand({
+          Data: Buffer.from(
+            JSON.stringify({
+              type: "text",
+              token: chunk.choices[0]?.delta?.content,
+              last: last,
+            })
+          ),
+          ConnectionId: uiConnection,
         })
       );
 
