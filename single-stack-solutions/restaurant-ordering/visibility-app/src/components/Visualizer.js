@@ -27,7 +27,7 @@ export function Visualizer({ updateWebsocketId }) {
 
       if (data.type === "setup") {
         updateWebsocketId(data.token);
-        message = JSON.stringify(data);
+        message = "Connected to ConversationRelay Websocket\n";
       }
       if (data.type === "info") {
         message = JSON.stringify(data) + "\n";

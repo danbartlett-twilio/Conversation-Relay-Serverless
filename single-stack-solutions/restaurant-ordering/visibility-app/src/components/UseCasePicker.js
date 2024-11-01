@@ -6,31 +6,29 @@ import {
   VisualPickerRadio,
   Button,
   Box,
-  MediaOjbect,
-  Avatar,
   MediaFigure,
-  CodeIcon,
   Text,
   StatusBadge,
-  AvatarGroup,
-  CommunityIcon,
   MediaObject,
   MediaBody,
+  Paragraph,
 } from "@twilio-paste/core";
+import { useToaster, Toaster } from "@twilio-paste/core/toast";
+
 import { CallIcon } from "@twilio-paste/icons/esm/CallIcon";
 import { CallFailedIcon } from "@twilio-paste/icons/esm/CallFailedIcon";
 
 import UseCaseModal from "./UseCaseModal";
 import setupCallEventHandlers from "../util/setupCallEventHandlers";
 import audiovisualizer from "../templates/audiovisualizer";
-import initialConfiguration from "../templates/initialConfiguration";
+import { initialConfiguration } from "../templates/initialConfiguration";
 
 let activeCall;
 
 export function UseCasePicker(props) {
   const [template, setTemplate] = useState("0");
   const [isOpen, setIsOpen] = useState(false);
-  const [config, setConfig] = useState(initialConfiguration.array);
+  const [config, setConfig] = useState(initialConfiguration);
 
   const websocketId = props.websocketId;
   const device = props.device;
@@ -40,10 +38,23 @@ export function UseCasePicker(props) {
     google: [
       "en-US-Journey-D",
       "en-US-Journey-O",
-      "fr-FR-Journey-F",
-      "es-US-Journey-D",
+      "en-GB-Journey-D",
+      "fr-FR-Neural2-C",
+      "es-ES-Neural2-C",
+      "ja-JP-Neural2-B",
     ],
     amazon: ["Amy-Generative", "Matthew-Generative"],
+  };
+
+  const toaster = useToaster();
+
+  const handleToast = (message, variant, dismissAfter, id) => {
+    toaster.push({
+      message: message,
+      variant: variant,
+      dismissAfter: dismissAfter,
+      id: id,
+    });
   };
 
   const handleOpen = () => setIsOpen(true);
@@ -86,7 +97,7 @@ export function UseCasePicker(props) {
   const useCaseURL =
     "https://8ldhh8emwh.execute-api.us-east-1.amazonaws.com/get-use-cases";
 
-  const getConfig = async (e) => {
+  const getConfig = async () => {
     try {
       const config = await axios.get(useCaseURL);
       setConfig(config.data.Items);
@@ -100,19 +111,43 @@ export function UseCasePicker(props) {
     }
   };
 
-  const resetDemo = () => {
-    console.log("init array", initialConfiguration.array);
-    setConfig(initialConfiguration.array);
-    // setTtsProvider(
-    //   initialConfiguration.array[0].conversationRelayParams.ttsProvider
-    // );
-    // setVoice(
-    //   voiceOptions[
-    //     initialConfiguration.array[0].conversationRelayParams.ttsProvider
-    //   ]
-    // );
-    console.log(config);
-    // updateConfig();
+  const handleUpdate = async (data) => {
+    handleToast(
+      "Your updates are currently being deployed.",
+      "neutral",
+      3000,
+      "neutralId"
+    );
+    const updateURL =
+      "https://96r3z8mzvc.execute-api.us-east-1.amazonaws.com/update-use-cases";
+
+    try {
+      await axios.post(updateURL, data);
+      toaster.pop("neutralId");
+      handleToast(
+        "Success! Your updates succeeded",
+        "success",
+        3000,
+        "successId"
+      );
+    } catch (e) {
+      console.log("Error", e);
+      handleToast(
+        "Unfortunately we ran into an error",
+        "error",
+        3000,
+        "errorId"
+      );
+    }
+  };
+
+  const resetDemo = async () => {
+    setConfig(initialConfiguration);
+    initialConfiguration.forEach((item) => {
+      console.log(item);
+      setVoice(voiceOptions[item.conversationRelayParams.ttsProvider]); //voiceOptions(google or amazon)
+      handleUpdate(item);
+    });
   };
 
   useEffect(() => {
@@ -121,13 +156,17 @@ export function UseCasePicker(props) {
 
   return (
     <div>
-      <Button onClick={resetDemo} variant="secondary">
-        Reset Configuration Values
-      </Button>
+      <Toaster {...toaster} />
+      <Paragraph>
+        <Button onClick={resetDemo} variant="secondary">
+          Reset Initial Configuration
+        </Button>
+      </Paragraph>
       <UseCaseModal
         config={config}
         template={template}
         voice={voice}
+        voiceOptions={voiceOptions}
         isOpen={isOpen}
         handleOpen={handleOpen}
         handleClose={handleClose}

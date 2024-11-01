@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
 import axios from "axios";
 
 import {
   Button,
-  Grid,
-  Column,
   Card,
   Heading,
   Form,
@@ -16,29 +14,28 @@ import {
   ModalFooter,
   ModalFooterActions,
   ModalBody,
-  Paragraph,
   Select,
   Option,
   TextArea,
   HelpText,
-  Stack,
-  Spinner,
 } from "@twilio-paste/core";
 
-// To do create Toast component
+import { useToaster, Toaster } from "@twilio-paste/core/toast";
 
 export function UseCaseModal(props) {
-  // Define voice options
-  const voiceOptions = {
-    google: [
-      "en-US-Journey-D",
-      "en-US-Journey-O",
-      "fr-FR-Journey-F",
-      "es-US-Journey-D",
-    ],
-    amazon: ["Amy-Generative", "Matthew-Generative"],
+  const toaster = useToaster();
+
+  const handleToast = (message, variant, dismissAfter, id) => {
+    toaster.push({
+      message: message,
+      variant: variant,
+      dismissAfter: dismissAfter,
+      id: id,
+    });
   };
 
+  // Define voice options
+  const voiceOptions = props.voiceOptions;
   const config = props.config;
   const template = props.template;
   const voice = props.voice;
@@ -47,31 +44,45 @@ export function UseCaseModal(props) {
   const handleVoiceUpdate = props.handleVoiceUpdate;
 
   const handleUpdate = async (e) => {
-    // setIsOpen(true);
-    // setLoading(true);
-    e.preventDefault();
-    console.log(config[template]);
+    // e.preventDefault();
+    handleToast(
+      "Your updates are currently being deployed.",
+      "neutral",
+      3000,
+      "neutralId"
+    );
 
     let data = config[template];
-    const headers = {
-      "Content-Type": "application/json",
-    };
 
     const updateURL =
       "https://96r3z8mzvc.execute-api.us-east-1.amazonaws.com/update-use-cases";
 
     try {
-      const res = await axios.post(updateURL, data, headers);
-      console.log(res);
-      // setLoading(false);
-      // setIsOpen(false);
+      await axios.post(updateURL, data);
+      toaster.pop("neutralId");
+      handleToast(
+        "Success! Your updates succeeded",
+        "success",
+        3000,
+        "successId"
+      );
+      setTimeout(() => {
+        props.handleClose();
+      }, 800);
     } catch (e) {
       console.log("Error", e);
+      handleToast(
+        "Unfortunately we ran into an error",
+        "error",
+        3000,
+        "errorId"
+      );
     }
   };
 
   return (
     <div>
+      <Toaster {...toaster} />
       <Modal isOpen={isOpen} onDismiss={props.handleClose} size="default">
         <ModalHeader>
           <ModalHeading as="h3">Configure Use Case</ModalHeading>
@@ -122,8 +133,10 @@ export function UseCaseModal(props) {
                   }}
                 >
                   <Option value="en-US">en-US</Option>
+                  <Option value="en-GB">en-GB</Option>
                   <Option value="fr-FR">fr-FR</Option>
                   <Option value="es-US">es-US</Option>
+                  <Option value="ja-JP">ja-JP</Option>
                 </Select>
               </FormControl>
               <FormControl>
@@ -142,8 +155,6 @@ export function UseCaseModal(props) {
                       voiceOptions[e.target.value][0];
                     handleConfigUpdate(updatedConfig);
                     handleVoiceUpdate(voiceOptions[e.target.value]);
-                    // setTtsProvider(e.target.value);
-                    // setVoice(voiceOptions[e.target.value]);
                   }}
                 >
                   <Option value="google">google</Option>
@@ -165,6 +176,8 @@ export function UseCaseModal(props) {
                       handleConfigUpdate(updatedConfig);
                     }}
                   >
+                    {/* {console.log(voice)} */}
+                    {/* Options are dependent on TTS provider & Language need to update */}
                     {voice.map((option, index) => (
                       <Option key={index} value={option}>
                         {option}
@@ -228,9 +241,13 @@ export function UseCaseModal(props) {
                   }
                   onChange={(e) => {
                     const updatedConfig = [...config];
-                    updatedConfig[
-                      template
-                    ].conversationRelayParams.profanityFilter = e.target.value;
+                    e.target.value === "true"
+                      ? (updatedConfig[
+                          template
+                        ].conversationRelayParams.profanityFilter = true)
+                      : (updatedConfig[
+                          template
+                        ].conversationRelayParams.profanityFilter = false);
                     handleConfigUpdate(updatedConfig);
                   }}
                 >
@@ -250,9 +267,13 @@ export function UseCaseModal(props) {
                   }
                   onChange={(e) => {
                     const updatedConfig = [...config];
-                    updatedConfig[
-                      template
-                    ].conversationRelayParams.dtmfDetection = e.target.value;
+                    e.target.value === "true"
+                      ? (updatedConfig[
+                          template
+                        ].conversationRelayParams.dtmfDetection = true)
+                      : (updatedConfig[
+                          template
+                        ].conversationRelayParams.dtmfDetection = false);
                     handleConfigUpdate(updatedConfig);
                   }}
                 >
@@ -263,7 +284,7 @@ export function UseCaseModal(props) {
               <FormControl>
                 <Label htmlFor="interruptible">Allow Interruption</Label>
                 <HelpText as="div" color="colorTextWeak">
-                  Specifies if DTMF keys can interrupt Text-to-Speech
+                  Specifies if you can interrupt Text-to-Speech
                 </HelpText>
                 <Select
                   value={
@@ -271,9 +292,40 @@ export function UseCaseModal(props) {
                   }
                   onChange={(e) => {
                     const updatedConfig = [...config];
-                    updatedConfig[
-                      template
-                    ].conversationRelayParams.interruptible = e.target.value;
+                    e.target.value === "true"
+                      ? (updatedConfig[
+                          template
+                        ].conversationRelayParams.interruptible = true)
+                      : (updatedConfig[
+                          template
+                        ].conversationRelayParams.interruptible = false);
+                    handleConfigUpdate(updatedConfig);
+                  }}
+                >
+                  <Option value="true">true</Option>
+                  <Option value="false">false</Option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <Label htmlFor="interruptByDtmf">
+                  Allow Interruption by DTMF
+                </Label>
+                <HelpText as="div" color="colorTextWeak">
+                  Specifies if DTMF keys can interrupt Text-to-Speech
+                </HelpText>
+                <Select
+                  value={
+                    config[template]?.conversationRelayParams.interruptByDtmf
+                  }
+                  onChange={(e) => {
+                    const updatedConfig = [...config];
+                    e.target.value === "true"
+                      ? (updatedConfig[
+                          template
+                        ].conversationRelayParams.interruptByDtmf = true)
+                      : (updatedConfig[
+                          template
+                        ].conversationRelayParams.interruptByDtmf = false);
                     handleConfigUpdate(updatedConfig);
                   }}
                 >

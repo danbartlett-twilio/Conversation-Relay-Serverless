@@ -7,7 +7,7 @@ import "./styles/VoxrayPhone.css";
 // import Profile from "./components/DBProfile";
 // import Configuration from "./components/Configuration";
 import audiovisualizer from "./templates/audiovisualizer";
-import Visualizer from "./Visualizer";
+import Visualizer from "./components/Visualizer";
 // import ReactAudioVisualizer from "./ReactAudioVisualizer";
 
 // Twilio Paste
@@ -460,39 +460,11 @@ export const VoxrayPhone = () => {
     runOnLoad();
   }, []);
 
-  // const register = async (e) => {
-  //   e.preventDefault();
-  //   runOnLoad(); //this is when socket is setup so we need to start setmessages here
-  // };
-
-  // const makeCall = (e) => {
-  //   e.preventDefault();
-  //   callTo("test:conversationRelay");
-  // };
-
-  // const hangupCall = (e) => {
-  //   e.preventDefault();
-  //   disconnect();
-  // };
-
   return (
     <Theme.Provider theme="Twilio">
       <Box paddingX="space100">
         <Theme.Provider theme="Twilio">
           <Box display="flex" flexDirection="column">
-            {/* <Box padding="space50">
-              <Stack orientation="horizontal" spacing="space60">
-                {!registered ? (
-                  <Button onClick={register} variant="primary">
-                    Register
-                  </Button>
-                ) : (
-                  <Button onClick={register} variant="secondary">
-                    Registered
-                  </Button>
-                )}
-              </Stack>
-            </Box> */}
             <Box padding="space50">
               <Heading as="h2" variant="heading20">
                 ConversationRelay Test Client

@@ -21,22 +21,35 @@ export const lambdaHandler = async (event, context) => {
       TableName: process.env.TABLE_NAME,
       Key: { pk: requestBody.pk, sk: "configuration" },
       UpdateExpression:
-        "set #prompt = :prompt, #cr.#wg = :wg, #cr.#tts = :tts, #cr.#voice = :voice",
+        "set #prompt = :prompt, #cr.#wg = :wg, #cr.#tts = :tts, #cr.#voice = :voice, #cr.#dtmfDetection = :dtmfDetection, #cr.#interruptByDtmf = :interruptByDtmf, #cr.#language = :language, #cr.#profanityFilter = :profanityFilter, #cr.#speechModel = :speechModel, #cr.#transcriptionProvider = :transcriptionProvider, #cr.#interruptible = :interruptible",
       ExpressionAttributeNames: {
-        "#prompt": "prompt", // Replace 'AttributeName' with the attribute you want to update
+        "#prompt": "prompt",
         "#cr": "conversationRelayParams",
         "#wg": "welcomeGreeting",
         "#tts": "ttsProvider",
         "#voice": "voice",
+        "#dtmfDetection": "dtmfDetection",
+        "#interruptByDtmf": "interruptByDtmf",
+        "#interruptible": "interruptible",
+        "#language": "language",
+        "#profanityFilter": "profanityFilter",
+        "#speechModel": "speechModel",
+        "#transcriptionProvider": "transcriptionProvider",
       },
       ExpressionAttributeValues: {
-        ":prompt": requestBody.prompt, //event.prompt,
+        ":prompt": requestBody.prompt,
         ":tts": requestBody.conversationRelayParams.ttsProvider,
         ":voice": requestBody.conversationRelayParams.voice,
-        // ":title": requestBody.title, //event.title,
         ":wg": requestBody.conversationRelayParams.welcomeGreeting,
+        ":dtmfDetection": requestBody.conversationRelayParams.dtmfDetection,
+        ":interruptByDtmf": requestBody.conversationRelayParams.interruptByDtmf,
+        ":interruptible": requestBody.conversationRelayParams.interruptible,
+        ":language": requestBody.conversationRelayParams.language,
+        ":profanityFilter": requestBody.conversationRelayParams.profanityFilter,
+        ":speechModel": requestBody.conversationRelayParams.speechModel,
+        ":transcriptionProvider":
+          requestBody.conversationRelayParams.transcriptionProvider,
       },
-      // Item: event,
       ReturnValues: "ALL_NEW",
     };
 
