@@ -394,7 +394,7 @@ export const VoxrayPhone = () => {
 
   const createVoiceDevice = async () => {
     const myDevice = await new Device(voicetoken, {
-      logLevel: 4, // 5 disables all logs
+      logLevel: 5, // 5 disables all logs
       // chunderw: "chunderw-vpc-gll.twilio.com",
       // region: "prod-us1",
       // eventgw: "eventgw.twilio.com",

@@ -12,6 +12,10 @@ const initialConfiguration = [
       welcomeGreeting:
         "Hello there! I'm Amy from Parkview apartments, how can I help?",
       interruptible: true,
+      profanityFilter: true,
+      transcriptionProvider: "google",
+      speechModel: "telephony",
+      language: "en-US",
     },
     dtmfHandlers:
       '{"0":{"replyWithText":true,"replyText":"You pressed 0.","replyWithFunction":false,"replyFunction":""},"1":{"replyWithText":true,"replyText":"You pressed 1.","replyWithFunction":false,"replyFunction":""},"2":{"replyWithText":true,"replyText":"You pressed 2.","replyWithFunction":false,"replyFunction":""},"3":{"replyWithText":true,"replyText":"You pressed 3.","replyWithFunction":false,"replyFunction":""},"4":{"replyWithText":true,"replyText":"You pressed 4.","replyWithFunction":false,"replyFunction":""},"5":{"replyWithText":true,"replyText":"You pressed 5.","replyWithFunction":false,"replyFunction":""},"6":{"replyWithText":true,"replyText":"You pressed 6.","replyWithFunction":false,"replyFunction":""},"7":{"replyWithText":true,"replyText":"You pressed 7.","replyWithFunction":false,"replyFunction":""},"8":{"replyWithText":true,"replyText":"You pressed 8.","replyWithFunction":false,"replyFunction":""},"9":{"replyWithText":true,"replyText":"You pressed 9.","replyWithFunction":false,"replyFunction":""}}',
@@ -36,6 +40,10 @@ const initialConfiguration = [
       welcomeGreeting:
         "Thanks for calling Twilio Dough Boy Pizza! How can I help you?",
       interruptible: true,
+      profanityFilter: true,
+      transcriptionProvider: "google",
+      speechModel: "telephony",
+      language: "en-US",
     },
     dtmfHandlers:
       '{"0":{"replyWithText":true,"replyText":"You pressed 0.","replyWithFunction":false,"replyFunction":""},"1":{"replyWithText":true,"replyText":"You pressed 1.","replyWithFunction":false,"replyFunction":""},"2":{"replyWithText":true,"replyText":"You pressed 2.","replyWithFunction":false,"replyFunction":""},"3":{"replyWithText":true,"replyText":"You pressed 3.","replyWithFunction":false,"replyFunction":""},"4":{"replyWithText":true,"replyText":"You pressed 4.","replyWithFunction":false,"replyFunction":""},"5":{"replyWithText":true,"replyText":"You pressed 5.","replyWithFunction":false,"replyFunction":""},"6":{"replyWithText":true,"replyText":"You pressed 6.","replyWithFunction":false,"replyFunction":""},"7":{"replyWithText":true,"replyText":"You pressed 7.","replyWithFunction":false,"replyFunction":""},"8":{"replyWithText":true,"replyText":"You pressed 8.","replyWithFunction":false,"replyFunction":""},"9":{"replyWithText":true,"replyText":"You pressed 9.","replyWithFunction":false,"replyFunction":""}}',

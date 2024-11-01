@@ -1,26 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import { TextArea, Box, Label } from "@twilio-paste/core";
 
-export function Visualizer({updateWebsocketId}) {
+export function Visualizer({ updateWebsocketId }) {
   const [ws, setWs] = useState(null);
   const [messages, setMessages] = useState("");
-  
+
   // const [messageArr, setMessageArr] = useState([]);
   const textLog = useRef();
   let controlsocket;
 
   function setupWebsockToController() {
-    //This is the websocket connection lambda we need to set up
-    // const socket = new WebSocket("ws://localhost:3000/client");
     const socket = new WebSocket(
       " wss://8bs3g9ns29.execute-api.us-east-1.amazonaws.com/prod"
-      // "wss://a1jj9krs1b.execute-api.us-east-1.amazonaws.com/prod/"
-    ); //for dev we need to set up websocket
+    );
     setWs(socket);
 
     socket.onopen = function (event) {
       console.log("WebSocket call opened:", event);
-      socket.send(JSON.stringify({"type": "setup"})); //this is corretly firing the websocket
+      socket.send(JSON.stringify({ type: "setup" }));
     };
 
     socket.onmessage = function (event) {
@@ -29,8 +26,8 @@ export function Visualizer({updateWebsocketId}) {
       const data = JSON.parse(event.data);
 
       if (data.type === "setup") {
-        updateWebsocketId(data.token)
-        message = "";
+        updateWebsocketId(data.token);
+        message = JSON.stringify(data);
       }
       if (data.type === "info") {
         message = JSON.stringify(data) + "\n";
@@ -45,7 +42,7 @@ export function Visualizer({updateWebsocketId}) {
         message = data.text + "\n";
       }
       if (data.type === "text") {
-        message = data.token+ "\n";
+        message = data.token + "\n";
       }
 
       setMessages((prev) => prev + message);
