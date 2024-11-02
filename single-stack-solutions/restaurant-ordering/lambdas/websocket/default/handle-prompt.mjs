@@ -88,20 +88,20 @@ export async function handlePrompt(promptObj) {
         currentToolCallId = currentToolCall.id;
       }
 
-      console.log(currentToolCall);
+      console.log("handle-prompt.mjs", currentToolCall);
 
       // add ui-client here
-      // await ui_ws_client.send(
-      //   new PostToConnectionCommand({
-      //     Data: Buffer.from(
-      //       JSON.stringify({
-      //         type: "functionCall",
-      //         text: `Detected new tool call: ${currentToolCall?.function?.name}`,
-      //       })
-      //     ),
-      //     ConnectionId: uiConnection,
-      //   })
-      // );
+      await ui_ws_client.send(
+        new PostToConnectionCommand({
+          Data: Buffer.from(
+            JSON.stringify({
+              type: "functionCall",
+              text: `Detected new tool call: ${currentToolCall?.function?.name}`,
+            })
+          ),
+          ConnectionId: uiConnection.Item.uiConnId,
+        })
+      );
 
       // Add an object for tool call the first time we see it
       if (!returnObj.tool_calls[currentToolCall.id]) {
@@ -121,23 +121,6 @@ export async function handlePrompt(promptObj) {
         returnObj.tool_calls[currentToolCallId].function.arguments =
           returnObj.tool_calls[currentToolCallId].function.arguments +
           currentToolCall.function.arguments;
-
-        // add ui-client here
-        // await ui_ws_client.send(
-        //   new PostToConnectionCommand({
-        //     Data: Buffer.from(
-        //       JSON.stringify({
-        //         type: "functionCall",
-        //         text: `Detected new tool call: ${
-        //           currentToolCall.function?.name
-        //         } with arguments: ${JSON.stringify(
-        //           currentToolCall.function.arguments
-        //         )}`,
-        //       })
-        //     ),
-        //     ConnectionId: uiConnection,
-        //   })
-        // );
       }
 
       // finish_reason should be "tool_calls"
@@ -163,7 +146,7 @@ export async function handlePrompt(promptObj) {
         })
       );
 
-      console.log(ui_ws_client);
+      console.log(ui_ws_client); //
       // add ui-client here
       await ui_ws_client.send(
         new PostToConnectionCommand({
@@ -174,7 +157,7 @@ export async function handlePrompt(promptObj) {
               last: last,
             })
           ),
-          ConnectionId: uiConnection,
+          ConnectionId: uiConnection.Item.uiConnId,
         })
       );
 

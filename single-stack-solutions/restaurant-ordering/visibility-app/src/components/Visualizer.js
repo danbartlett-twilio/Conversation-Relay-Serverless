@@ -49,7 +49,7 @@ export function Visualizer({ updateWebsocketId }) {
         }
       }
       if (data.type === "functionCall") {
-        message = "\n";
+        message = data.text + "\n";
       }
 
       setMessages((prev) => prev + message);

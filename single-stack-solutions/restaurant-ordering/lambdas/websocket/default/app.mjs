@@ -107,6 +107,8 @@ export const lambdaHandler = async (event, context) => {
     //   token: callConnection.Item?.welcomeGreeting,
     // };
     // sendMessage(text, ui_ws_client, uiConnection.Item?.uiConnId);
+
+    // we always need to check for uiConnection and Uiclient because if calling from PSTN this won't exist
     sendMessage(body, ui_ws_client, uiConnection.Item?.uiConnId);
   }
 
@@ -147,6 +149,7 @@ export const lambdaHandler = async (event, context) => {
       // an array to adhere to llm chat messaging format
       if (Object.keys(llmResult.tool_calls).length > 0) {
         // Format tool_calls object into an array
+        console.log("tools called app.mjs", llmResult.tool_calls);
         newAssistantChatMessage.tool_calls = Object.values(
           llmResult.tool_calls
         );
@@ -180,6 +183,8 @@ export const lambdaHandler = async (event, context) => {
             ddbDocClient: ddbDocClient,
             connectionId: connectionId,
             callConnection: callConnection,
+            ui_ws_client: ui_ws_client,
+            uiConnection: uiConnection,
             ws_client: ws_client,
             ws_domain_name: ws_domain_name,
             ws_stage: ws_stage,
