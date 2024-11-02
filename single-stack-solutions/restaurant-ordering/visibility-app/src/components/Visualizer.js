@@ -38,7 +38,7 @@ export function Visualizer({ updateWebsocketId }) {
       }
       if (data.type === "prompt" && data.voicePrompt !== "undefined") {
         // User
-        message = data.voicePrompt;
+        message = data.voicePrompt + "\n";
       }
       if (data.type === "text" && data.token !== "undefined") {
         // Agent

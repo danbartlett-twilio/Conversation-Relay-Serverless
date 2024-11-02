@@ -178,7 +178,10 @@ export async function handlePrompt(promptObj) {
   }
 
   // Return Tool Call Responses to UI here
-  if (returnObj.finish_reason === "tool_calls") {
+  if (
+    returnObj.finish_reason === "tool_calls" &&
+    returnObj.tool_calls.function?.name !== ""
+  ) {
     await ui_ws_client.send(
       new PostToConnectionCommand({
         Data: Buffer.from(
