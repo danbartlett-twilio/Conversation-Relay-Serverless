@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 import {
@@ -19,18 +19,24 @@ import { CallIcon } from "@twilio-paste/icons/esm/CallIcon";
 import { CallFailedIcon } from "@twilio-paste/icons/esm/CallFailedIcon";
 
 import UseCaseModal from "./UseCaseModal";
+import Visualizer from "./Visualizer";
 import setupCallEventHandlers from "../util/setupCallEventHandlers";
 import audiovisualizer from "../templates/audiovisualizer";
 import { initialConfiguration } from "../templates/initialConfiguration";
 
 let activeCall;
 
-export function UseCasePicker(props) {
+const UseCasePicker = (props) => {
+  const visualizerRef = useRef();
+
   const [template, setTemplate] = useState("0");
   const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState(initialConfiguration);
+  // const [openWs, setOpenWs] = useState(false);
+  const [websocketId, setWebsocketId] = useState("");
 
-  const websocketId = props.websocketId;
+  // const updateWebsocketId = props.updateWebsocketId; //confirm if need both
+  // const websocketId = props.websocketId;
   const device = props.device;
 
   const [voice, setVoice] = useState([]);
@@ -66,14 +72,37 @@ export function UseCasePicker(props) {
   const handleVoiceUpdate = (updatedVoiceOptions) =>
     setVoice(updatedVoiceOptions);
 
-  async function callTo() {
-    console.log("template is", template);
+  const updateWebsocketId = (newId) => {
+    console.log("updating websocket ID to: " + newId);
+    setWebsocketId(newId);
+  };
+
+  // const testOpenWs = async () => {
+  //   if (visualizerRef.current) {
+  //     visualizerRef.current.invokeSetupWebsockToController();
+  //   }
+  // };
+
+  // const testCloseWs = async () => {
+  //   if (visualizerRef.current) {
+  //     visualizerRef.current.invokeCloseWebsockToController();
+  //   }
+  // };
+
+  const callTo = async () => {
+    // we need to open Websocket connection here and close on disconnect
+    console.log("websocketID is: " + websocketId);
+
+    if (visualizerRef.current && !websocketId) {
+      visualizerRef.current.invokeSetupWebsockToController();
+    }
+
     // we should have already registered
-    if (device === undefined) {
+    if (!device) {
       console.log("voice device not created yet");
       return;
     }
-    console.log("websocketID is: " + websocketId);
+
     var params = {
       To: "test:conversationRelay",
       useCaseTitle: config[template].pk,
@@ -83,11 +112,13 @@ export function UseCasePicker(props) {
     console.log(activeCall);
     setupCallEventHandlers(activeCall);
     audiovisualizer.analyze(activeCall);
-  }
+  };
 
-  const hangupCall = (e) => {
-    e.preventDefault();
-    if (activeCall === undefined) {
+  const hangupCall = () => {
+    if (visualizerRef.current) {
+      visualizerRef.current.invokeCloseWebsockToController();
+    }
+    if (!activeCall) {
       console.log("call object not created yet");
       return;
     }
@@ -236,12 +267,22 @@ export function UseCasePicker(props) {
                     title="Description of icon"
                   />
                 </Button>
+                {/* <Button onClick={testOpenWs}>OpenWs</Button>
+                <Button onClick={testCloseWs}>CloseWs</Button> */}
               </Box>
             </Box>
           </VisualPickerRadio>
         ))}
       </VisualPickerRadioGroup>
+      <Visualizer
+        updateWebsocketId={updateWebsocketId}
+        ref={visualizerRef}
+        welcomeGreeting={
+          config[template].conversationRelayParams.welcomeGreeting
+        }
+      />
     </div>
   );
-}
+};
+
 export default UseCasePicker;

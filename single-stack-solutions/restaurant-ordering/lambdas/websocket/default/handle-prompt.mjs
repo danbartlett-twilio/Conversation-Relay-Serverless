@@ -99,7 +99,7 @@ export async function handlePrompt(promptObj) {
               text: `Detected new tool call: ${currentToolCall?.function?.name}`,
             })
           ),
-          ConnectionId: uiConnection.Item.uiConnId,
+          ConnectionId: uiConnection.Item?.uiConnId,
         })
       );
 
@@ -146,8 +146,7 @@ export async function handlePrompt(promptObj) {
         })
       );
 
-      console.log(ui_ws_client); //
-      // add ui-client here
+      // Return LLM Responses to UI here
       await ui_ws_client.send(
         new PostToConnectionCommand({
           Data: Buffer.from(
@@ -157,7 +156,7 @@ export async function handlePrompt(promptObj) {
               last: last,
             })
           ),
-          ConnectionId: uiConnection.Item.uiConnId,
+          ConnectionId: uiConnection.Item?.uiConnId,
         })
       );
 
@@ -176,6 +175,24 @@ export async function handlePrompt(promptObj) {
   // This check just deletes it if it exists
   if (returnObj.tool_calls.hasOwnProperty("undefined")) {
     delete returnObj.tool_calls["undefined"];
+  }
+
+  // Return Tool Call Responses to UI here
+  if (
+    returnObj.finish_reason === "tool_calls" &&
+    returnObj.tool_calls.function?.name !== ""
+  ) {
+    await ui_ws_client.send(
+      new PostToConnectionCommand({
+        Data: Buffer.from(
+          JSON.stringify({
+            type: "functionCall",
+            text: `Detected new tool call: ${returnObj.tool_calls?.function?.name} with arguments: ${returnObj.tool_calls?.function?.arguments}`,
+          })
+        ),
+        ConnectionId: uiConnection.Item?.uiConnId,
+      })
+    );
   }
 
   console.info(

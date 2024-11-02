@@ -2,12 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
-// import StatusArea from "./StatusArea";
-// import Visualizer from "./Visualizer";
 // import Profile from "./components/DBProfile";
-// import Configuration from "./components/Configuration";
 import audiovisualizer from "./templates/audiovisualizer";
-import Visualizer from "./components/Visualizer";
+// import Visualizer from "./components/Visualizer";
 // import ReactAudioVisualizer from "./ReactAudioVisualizer";
 
 // Twilio Paste
@@ -16,17 +13,10 @@ import { Box, Heading, Label } from "@twilio-paste/core";
 
 import UseCasePicker from "./components/UseCasePicker";
 
-// let myDevice;
-// let activeCall;
-let voicetoken;
-// let environment;
-// let clientRole;
-// let callType;
-// let controlsocket;
-// let messageString = "";
-
 export const VoxrayPhone = () => {
   // const [messages, setMessages] = useState("");
+  let voiceToken;
+
   const [device, setDevice] = useState();
   const [websocketId, setWebsocketId] = useState("");
 
@@ -220,14 +210,17 @@ export const VoxrayPhone = () => {
   }
 
   async function registerVoiceClient() {
-    if (voicetoken === undefined) {
-      let url =
-        "https://90u5oq4e5j.execute-api.us-east-1.amazonaws.com/register-voice-client";
-      let res = await axios.get(url);
-      voicetoken = res.data;
-      console.log(voicetoken);
+    if (!voiceToken) {
+      try {
+        let url =
+          "https://90u5oq4e5j.execute-api.us-east-1.amazonaws.com/register-voice-client";
+        let res = await axios.get(url);
+        voiceToken = res.data;
+        createVoiceDevice();
+      } catch (e) {
+        console.log(e);
+      }
     }
-    createVoiceDevice();
   }
 
   //   async function agentRegistration() {
@@ -395,7 +388,7 @@ export const VoxrayPhone = () => {
   // }
 
   const createVoiceDevice = async () => {
-    const myDevice = await new Device(voicetoken, {
+    const myDevice = await new Device(voiceToken, {
       logLevel: 5, // 5 disables all logs
       // chunderw: "chunderw-vpc-gll.twilio.com",
       // region: "prod-us1",
@@ -456,6 +449,17 @@ export const VoxrayPhone = () => {
   //   //   registrationButton.disabled = disabled;
   // }
 
+  // const [openWs, setOpenWs] = useState(false);
+
+  // const handleOpenWebsocket = () => {
+  //   setOpenWs(true);
+  // };
+
+  // const handleCloseWebsocket = () => {
+  //   "closing websocket";
+  //   setOpenWs(false);
+  // };
+
   useEffect(() => {
     runOnLoad();
   }, []);
@@ -472,12 +476,21 @@ export const VoxrayPhone = () => {
               {/* Would only be important if calling in from PSTN? - how does client know which use case / configuration to use when calling */}
               {/* <Label>Profile</Label>
               <Profile /> */}
-              <UseCasePicker websocketId={websocketId} device={device} />
+              <UseCasePicker
+                // websocketId={websocketId}
+                device={device}
+                // updateWebsocketId={updateWebsocketId}
+                // handleOpenWebsocket={handleOpenWebsocket}
+                // handleCloseWebsocket={handleCloseWebsocket}
+              />
+              {/* <Visualizer
+                updateWebsocketId={updateWebsocketId}
+                openWs={openWs}
+                welcomeGreeting={"Hi this is Amy from Parkview Apartments"}
+              /> */}
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
-              {/* <StatusArea status={messages} /> */}
               {/* <ReactAudioVisualizer /> */}
-              <Visualizer updateWebsocketId={updateWebsocketId} />
             </Box>
           </Box>
         </Theme.Provider>
