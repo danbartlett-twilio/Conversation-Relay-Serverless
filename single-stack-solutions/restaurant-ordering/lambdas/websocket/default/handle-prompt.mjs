@@ -91,17 +91,17 @@ export async function handlePrompt(promptObj) {
       console.log("current tool call is", currentToolCall);
 
       // add ui-client here
-      // await ui_ws_client.send(
-      //   new PostToConnectionCommand({
-      //     Data: Buffer.from(
-      //       JSON.stringify({
-      //         type: "functionCall",
-      //         text: `Detected new tool call: ${currentToolCall?.function?.name}`,
-      //       })
-      //     ),
-      //     ConnectionId: uiConnection.Item?.uiConnId,
-      //   })
-      // );
+      await ui_ws_client.send(
+        new PostToConnectionCommand({
+          Data: Buffer.from(
+            JSON.stringify({
+              type: "functionCall",
+              text: `Detected new tool call: ${currentToolCall?.function?.name}`,
+            })
+          ),
+          ConnectionId: uiConnection.Item?.uiConnId,
+        })
+      );
 
       // Add an object for tool call the first time we see it
       if (!returnObj.tool_calls[currentToolCall.id]) {
@@ -121,23 +121,6 @@ export async function handlePrompt(promptObj) {
         returnObj.tool_calls[currentToolCallId].function.arguments =
           returnObj.tool_calls[currentToolCallId].function.arguments +
           currentToolCall.function.arguments;
-
-        // add ui-client here
-        // await ui_ws_client.send(
-        //   new PostToConnectionCommand({
-        //     Data: Buffer.from(
-        //       JSON.stringify({
-        //         type: "functionCall",
-        //         text: `Detected new tool call: ${
-        //           currentToolCall.function?.name
-        //         } with arguments: ${JSON.stringify(
-        //           currentToolCall.function.arguments
-        //         )}`,
-        //       })
-        //     ),
-        //     ConnectionId: uiConnection.Item?.uiConnId,
-        //   })
-        // );
       }
 
       // finish_reason should be "tool_calls"

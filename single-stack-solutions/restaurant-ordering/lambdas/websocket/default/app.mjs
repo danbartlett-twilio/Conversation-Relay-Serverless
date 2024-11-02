@@ -154,6 +154,8 @@ export const lambdaHandler = async (event, context) => {
             ddbDocClient: ddbDocClient,
             connectionId: connectionId,
             callConnection: callConnection,
+            ui_ws_client: ui_ws_client,
+            uiConnection: uiConnection,
             ws_client: ws_client,
             ws_domain_name: ws_domain_name,
             ws_stage: ws_stage,

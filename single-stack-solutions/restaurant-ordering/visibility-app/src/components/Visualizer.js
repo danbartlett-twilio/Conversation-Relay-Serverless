@@ -49,7 +49,7 @@ export function Visualizer({ updateWebsocketId }) {
         }
       }
       if (data.type === "functionCall") {
-        message = data.text;
+        message = data.text + "\n";
       }
 
       setMessages((prev) => prev + message);
@@ -75,7 +75,7 @@ export function Visualizer({ updateWebsocketId }) {
     } else {
       textLog.current.scrollTop = textLog.current.scrollHeight;
     }
-  }, [messages]);
+  }, []);
 
   return (
     <Box>
