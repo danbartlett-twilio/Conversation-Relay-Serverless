@@ -1,13 +1,33 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { TextArea, Box, Label } from "@twilio-paste/core";
 
-export function Visualizer({ updateWebsocketId }) {
+//rewrite visualizer as child of UseCasePicker rather than VoxrayPhone
+
+const Visualizer = forwardRef((props, ref) => {
   const [ws, setWs] = useState(null);
   const [messages, setMessages] = useState("");
   const textLog = useRef(null);
-  let controlsocket;
 
-  function setupWebsockToController() {
+  const updateWebsocketId = props.updateWebsocketId;
+  // const websocketId = props.websocketId;
+
+  // Invoke Websocket from parent
+  useImperativeHandle(ref, () => ({
+    invokeSetupWebsockToController() {
+      setupWebsockToController();
+    },
+    invokeCloseWebsockToController() {
+      closeWebsockToController();
+    },
+  }));
+
+  const setupWebsockToController = () => {
     const socket = new WebSocket(
       " wss://8bs3g9ns29.execute-api.us-east-1.amazonaws.com/prod"
     );
@@ -16,6 +36,9 @@ export function Visualizer({ updateWebsocketId }) {
     socket.onopen = function (event) {
       console.log("WebSocket call opened:", event);
       socket.send(JSON.stringify({ type: "setup" }));
+      setMessages(" --- Connected to ConversationRelay ---\n");
+      // Consider amending this as it's getting set before the mediastream, should instead move to onMessage received from lambda function
+      setMessages((prev) => prev + props.welcomeGreeting + "\n");
     };
 
     socket.onmessage = function (event) {
@@ -53,32 +76,40 @@ export function Visualizer({ updateWebsocketId }) {
       }
 
       setMessages((prev) => prev + message);
-      // setMessageArr((prev) => [...messageArr, prev + message]);
     };
 
     socket.onerror = function (event) {
       console.log("WebSocket error:", event);
-      controlsocket = undefined;
-      // setWs(undefined);
+      setWs(undefined);
     };
-    setWs(socket);
 
     // Clean up on unmount
     return () => {
       socket.close();
     };
-  }
+  };
+
+  const closeWebsockToController = () => {
+    if (ws) {
+      ws.close();
+      setWs(null);
+      setMessages(
+        (prev) => prev + "\n --- Disconnected from ConversationRelay ---"
+      );
+    }
+  };
 
   useEffect(() => {
-    setupWebsockToController();
     if (!textLog.current) {
     } else {
       textLog.current.scrollTop = textLog.current.scrollHeight;
     }
-  }, []);
+  }, [messages]);
 
   return (
     <Box>
+      {/* <Button onClick={setupWebsockToController}>Set WS</Button>
+      <Button onClick={closeWebsockToController}>Close WS</Button> */}
       <Label htmlFor="statusArea">
         ConversationRelay Websocket Status Area
       </Label>
@@ -87,8 +118,9 @@ export function Visualizer({ updateWebsocketId }) {
         className="status-area"
         name="statusArea"
         value={messages}
-        ref={textLog}
-        maxRows="5"
+        ref={textLog} // Used to autoscroll
+        row="10"
+        maxRows="10"
         readOnly
         style={{
           overflowY: "auto", // Enable vertical scrolling
@@ -109,5 +141,5 @@ export function Visualizer({ updateWebsocketId }) {
       {/* <div>{messages}</div> */}
     </Box>
   );
-}
+});
 export default Visualizer;
