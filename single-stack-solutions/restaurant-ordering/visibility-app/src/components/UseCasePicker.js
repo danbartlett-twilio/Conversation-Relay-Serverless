@@ -11,7 +11,7 @@ import {
   StatusBadge,
   MediaObject,
   MediaBody,
-  Paragraph,
+  Stack,
 } from "@twilio-paste/core";
 import { useToaster, Toaster } from "@twilio-paste/core/toast";
 
@@ -24,19 +24,19 @@ import setupCallEventHandlers from "../util/setupCallEventHandlers";
 import audiovisualizer from "../templates/audiovisualizer";
 import { initialConfiguration } from "../templates/initialConfiguration";
 
-let activeCall;
-
 const UseCasePicker = (props) => {
   const visualizerRef = useRef();
+
+  const useCaseURL = process.env.REACT_APP_GET_USE_CASE_URL;
+  const updateURL = process.env.REACT_APP_UPDATE_USE_CASE_URL;
 
   const [template, setTemplate] = useState("0");
   const [isOpen, setIsOpen] = useState(false);
   const [config, setConfig] = useState(initialConfiguration);
-  // const [openWs, setOpenWs] = useState(false);
-  const [websocketId, setWebsocketId] = useState("");
 
-  // const updateWebsocketId = props.updateWebsocketId; //confirm if need both
-  // const websocketId = props.websocketId;
+  let activeCall;
+  let websocketId;
+
   const device = props.device;
 
   const [voice, setVoice] = useState([]);
@@ -74,71 +74,57 @@ const UseCasePicker = (props) => {
 
   const updateWebsocketId = (newId) => {
     console.log("updating websocket ID to: " + newId);
-    setWebsocketId(newId);
+    websocketId = newId;
+    callTo();
   };
 
-  // const testOpenWs = async () => {
-  //   if (visualizerRef.current) {
-  //     visualizerRef.current.invokeSetupWebsockToController();
-  //   }
-  // };
-
-  // const testCloseWs = async () => {
-  //   if (visualizerRef.current) {
-  //     visualizerRef.current.invokeCloseWebsockToController();
-  //   }
-  // };
-
   const callTo = async () => {
-    // we need to open Websocket connection here and close on disconnect
-    console.log("websocketID is: " + websocketId);
-
-    if (visualizerRef.current && !websocketId) {
-      visualizerRef.current.invokeSetupWebsockToController();
-    }
-
-    // we should have already registered
-    if (!device) {
-      console.log("voice device not created yet");
+    // Setup Websocket
+    if (activeCall) {
       return;
-    }
+    } else {
+      if (!websocketId) {
+        if (visualizerRef.current && !websocketId) {
+          console.log("Initializing websocket connection");
+          visualizerRef.current.invokeSetupWebsockToController();
+        }
+      } else {
+        if (!device) {
+          handleToast(
+            "Please refrese the page, voice device not created",
+            "error",
+            3000,
+            "deviceErrorToast"
+          );
+          console.log("voice device not created yet");
+          return;
+        }
+        console.log("websocketId is: " + websocketId);
+        // Place call
+        var params = {
+          To: "test:conversationRelay",
+          useCaseTitle: config[template].pk,
+          uiwebsocketId: websocketId,
+        };
 
-    var params = {
-      To: "test:conversationRelay",
-      useCaseTitle: config[template].pk,
-      uiwebsocketId: websocketId,
-    };
-    activeCall = await device.connect({ params });
-    console.log(activeCall);
-    setupCallEventHandlers(activeCall);
-    audiovisualizer.analyze(activeCall);
+        activeCall = await device.connect({ params });
+        setupCallEventHandlers(activeCall);
+        audiovisualizer.analyze(activeCall);
+      }
+    }
   };
 
   const hangupCall = () => {
-    if (visualizerRef.current) {
-      visualizerRef.current.invokeCloseWebsockToController();
-    }
     if (!activeCall) {
-      console.log("call object not created yet");
+      console.log("Call object not created yet");
       return;
-    }
-    activeCall.disconnect();
-  };
-
-  const useCaseURL =
-    "https://8ldhh8emwh.execute-api.us-east-1.amazonaws.com/get-use-cases";
-
-  const getConfig = async () => {
-    try {
-      const config = await axios.get(useCaseURL);
-      setConfig(config.data.Items);
-      setVoice(
-        voiceOptions[
-          config.data.Items[template].conversationRelayParams.ttsProvider
-        ]
-      );
-    } catch (e) {
-      console.log(e);
+    } else {
+      // Disconnect call
+      activeCall.disconnect();
+      // Close websocket connection
+      if (visualizerRef.current) {
+        visualizerRef.current.invokeCloseWebsockToController();
+      }
     }
   };
 
@@ -149,8 +135,6 @@ const UseCasePicker = (props) => {
       3000,
       "neutralId"
     );
-    const updateURL =
-      "https://96r3z8mzvc.execute-api.us-east-1.amazonaws.com/update-use-cases";
 
     try {
       await axios.post(updateURL, data);
@@ -182,17 +166,45 @@ const UseCasePicker = (props) => {
   };
 
   useEffect(() => {
+    console.log("use effect called");
+    const getConfig = async () => {
+      try {
+        const config = await axios.get(useCaseURL);
+        setConfig(config.data.Items);
+        console.log(initialConfiguration);
+        // for (const item in initialConfiguration) {
+        //   console.log(item);
+        //   setVoice(
+        //     initialConfiguration[item].conversationRelayParams.voiceOptions
+        //   );
+        // }
+        setVoice(
+          voiceOptions[
+            config.data.Items[template].conversationRelayParams.ttsProvider
+          ]
+        );
+      } catch (e) {
+        console.log(e);
+      }
+    };
     getConfig();
-  }, []);
+  }, [useCaseURL]);
 
   return (
     <div>
       <Toaster {...toaster} />
-      <Paragraph>
+      <Stack orientation="horizontal" spacing="space60">
         <Button onClick={resetDemo} variant="secondary">
-          Reset Initial Configuration
+          Reset Use Cases
         </Button>
-      </Paragraph>
+        <Button onClick={callTo} variant="primary">
+          Call <CallIcon decorative={false} title="make call" />
+        </Button>
+        <Button onClick={hangupCall} variant="destructive">
+          Disconnect
+          <CallFailedIcon decorative={false} title="Description of icon" />
+        </Button>
+      </Stack>
       <UseCaseModal
         config={config}
         template={template}
@@ -257,18 +269,6 @@ const UseCasePicker = (props) => {
                 <Button onClick={handleConfigure} variant="secondary">
                   Configure
                 </Button>
-                <Button onClick={callTo} variant="primary">
-                  Call <CallIcon decorative={false} title="make call" />
-                </Button>
-                <Button onClick={hangupCall} variant="destructive">
-                  Disconnect
-                  <CallFailedIcon
-                    decorative={false}
-                    title="Description of icon"
-                  />
-                </Button>
-                {/* <Button onClick={testOpenWs}>OpenWs</Button>
-                <Button onClick={testCloseWs}>CloseWs</Button> */}
               </Box>
             </Box>
           </VisualPickerRadio>
