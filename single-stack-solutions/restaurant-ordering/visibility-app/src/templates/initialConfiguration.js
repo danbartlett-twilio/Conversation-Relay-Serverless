@@ -1,15 +1,3 @@
-export const voiceOptions = {
-  google: [
-    "en-US-Journey-D",
-    "en-US-Journey-O",
-    "en-GB-Journey-D",
-    "fr-FR-Neural2-C",
-    "es-ES-Neural2-C",
-    "ja-JP-Neural2-B",
-  ],
-  amazon: ["Amy-Generative", "Matthew-Generative"],
-};
-
 export const initialConfiguration = [
   {
     pk: "apartmentSearchUseCase",
@@ -26,7 +14,6 @@ export const initialConfiguration = [
       transcriptionProvider: "google",
       ttsProvider: "amazon",
       voice: "Amy-Generative",
-      voiceOptions: voiceOptions.amazon,
       welcomeGreeting:
         "Hello there! I'm Amy from Parkview apartments, how can I help?",
     },
@@ -121,7 +108,6 @@ Remember that all replies should be returned in plain text. Do not return markdo
       transcriptionProvider: "google",
       ttsProvider: "google",
       voice: "en-US-Journey-O",
-      voiceOptions: voiceOptions.google,
       welcomeGreeting:
         "Thanks for calling Twilio Dough Boy Pizza! How can I help you?",
     },

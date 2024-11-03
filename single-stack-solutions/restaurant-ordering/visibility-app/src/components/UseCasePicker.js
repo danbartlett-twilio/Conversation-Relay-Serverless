@@ -67,6 +67,9 @@ const UseCasePicker = (props) => {
   const handleClose = () => setIsOpen(false);
   const handleConfigure = (e) => {
     setIsOpen(true);
+    setVoice(
+      voiceOptions[config[template].conversationRelayParams.ttsProvider]
+    );
   };
   const handleConfigUpdate = (updatedConfig) => setConfig(updatedConfig);
   const handleVoiceUpdate = (updatedVoiceOptions) =>
@@ -91,7 +94,7 @@ const UseCasePicker = (props) => {
       } else {
         if (!device) {
           handleToast(
-            "Please refrese the page, voice device not created",
+            "Please refresh the page, voice device not created",
             "error",
             3000,
             "deviceErrorToast"
@@ -166,23 +169,10 @@ const UseCasePicker = (props) => {
   };
 
   useEffect(() => {
-    console.log("use effect called");
     const getConfig = async () => {
       try {
         const config = await axios.get(useCaseURL);
         setConfig(config.data.Items);
-        console.log(initialConfiguration);
-        // for (const item in initialConfiguration) {
-        //   console.log(item);
-        //   setVoice(
-        //     initialConfiguration[item].conversationRelayParams.voiceOptions
-        //   );
-        // }
-        setVoice(
-          voiceOptions[
-            config.data.Items[template].conversationRelayParams.ttsProvider
-          ]
-        );
       } catch (e) {
         console.log(e);
       }

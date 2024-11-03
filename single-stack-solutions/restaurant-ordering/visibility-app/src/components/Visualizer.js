@@ -7,17 +7,14 @@ import React, {
 } from "react";
 import { TextArea, Box, Label } from "@twilio-paste/core";
 
-//rewrite visualizer as child of UseCasePicker rather than VoxrayPhone
-
 const Visualizer = forwardRef((props, ref) => {
   const [ws, setWs] = useState(null);
   const [messages, setMessages] = useState("");
   const textLog = useRef(null);
 
   const updateWebsocketId = props.updateWebsocketId;
-  // const websocketId = props.websocketId;
 
-  // Invoke Websocket from parent
+  // Invoke Websocket from UseCasePicker
   useImperativeHandle(ref, () => ({
     invokeSetupWebsockToController() {
       setupWebsockToController();
@@ -37,7 +34,6 @@ const Visualizer = forwardRef((props, ref) => {
       console.log("WebSocket call opened:", event);
       socket.send(JSON.stringify({ type: "setup" }));
       setMessages(" --- Connected to ConversationRelay ---\n");
-      // Consider amending this as it's getting set before the mediastream, should instead move to onMessage received from lambda function
       setMessages((prev) => prev + props.welcomeGreeting + "\n");
     };
 
@@ -108,8 +104,6 @@ const Visualizer = forwardRef((props, ref) => {
 
   return (
     <Box>
-      {/* <Button onClick={setupWebsockToController}>Set WS</Button>
-      <Button onClick={closeWebsockToController}>Close WS</Button> */}
       <Label htmlFor="statusArea">
         ConversationRelay Websocket Status Area
       </Label>
