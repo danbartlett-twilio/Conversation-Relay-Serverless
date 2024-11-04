@@ -10,19 +10,29 @@ import { CheckRestaurantPickUpTime } from "./check-pickup-time.mjs";
 import { SendRestaurantSmsFunction } from "./send-sms-confirmation.mjs";
 import { SendRestaurantEmailFunction } from "./send-email-confirmation.mjs";
 // Apartment Search
-import { CommonInquiriesFunction } from "./common-inquiries.mjs";
 import { CheckAvailabilityFunction } from "./check-availability.mjs";
+import { CheckExistingAppointmentsFunction } from "./check-existing-appointments.mjs";
+import { CommonInquiriesFunction } from "./common-inquiries.mjs";
+import { ListAvailableApartmentsFunction } from "./list-available-apartments.mjs";
+import { ScheduleTourFunction } from "./schedule-tour.mjs";
+import { SendAppointmentConfirmationSmsFunction } from "./send-appointment-confirmation-sms.mjs";
 
 // Functions are called dynamically but ONLY if they match a function
 // in this object.
 const FunctionHandler = {
+  //Restaurant Ordering
   PlaceOrderFunction,
   CheckRestaurantPickUpTime,
   CheckRestaurantDeliveryTime,
   SendRestaurantSmsFunction,
   SendRestaurantEmailFunction,
-  CommonInquiriesFunction,
+  //Apartment Search
   CheckAvailabilityFunction,
+  CheckExistingAppointmentsFunction,
+  CommonInquiriesFunction,
+  ListAvailableApartmentsFunction,
+  ScheduleTourFunction,
+  SendAppointmentConfirmationSmsFunction,
 };
 
 export async function makeFunctionCalls(
