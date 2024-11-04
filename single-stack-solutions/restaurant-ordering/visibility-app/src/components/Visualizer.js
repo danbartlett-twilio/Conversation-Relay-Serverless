@@ -55,11 +55,11 @@ const Visualizer = forwardRef((props, ref) => {
       if (data.type === "interrupt") {
         message = JSON.stringify(data) + "\n";
       }
-      if (data.type === "prompt" && data.voicePrompt !== "undefined") {
+      if (data.type === "prompt" && data.voicePrompt) {
         // User
         message = data.voicePrompt + "\n";
       }
-      if (data.type === "text" && data.token !== "undefined") {
+      if (data.type === "text" && data.token) {
         // Agent
         if (data.last === true) {
           message = "\n";
@@ -68,10 +68,16 @@ const Visualizer = forwardRef((props, ref) => {
         }
       }
       if (data.type === "functionCall") {
-        message = data.text + "\n";
+        message = data.token + "\n";
       }
 
-      setMessages((prev) => prev + message);
+      setMessages((prev) => {
+        if (message) {
+          return prev + message;
+        } else {
+          return prev;
+        }
+      });
     };
 
     socket.onerror = function (event) {

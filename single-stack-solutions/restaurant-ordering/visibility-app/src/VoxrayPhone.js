@@ -3,7 +3,7 @@ import axios from "axios";
 import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
 import audiovisualizer from "./templates/audiovisualizer";
-// import ReactAudioVisualizer from "./ReactAudioVisualizer";
+// import ReactAudioVisualizer from "./components/ReactAudioVisualizer";
 
 // Twilio Paste
 import { Theme } from "@twilio-paste/core/theme";

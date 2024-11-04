@@ -9,6 +9,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Needed to stream text responses back to Twilio (via WebSockets)
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
+import { replyToWS } from "./reply-to-ws.mjs";
 
 export async function handlePrompt(promptObj) {
   let model = process.env.LLM_MODEL ? process.env.LLM_MODEL : "gpt-4o-mini"; // "gpt-4-turbo";
@@ -88,21 +89,6 @@ export async function handlePrompt(promptObj) {
         currentToolCallId = currentToolCall.id;
       }
 
-      console.log("handle-prompt.mjs", currentToolCall);
-
-      // add ui-client here
-      await ui_ws_client.send(
-        new PostToConnectionCommand({
-          Data: Buffer.from(
-            JSON.stringify({
-              type: "functionCall",
-              text: `Detected new tool call: ${currentToolCall?.function?.name}`,
-            })
-          ),
-          ConnectionId: uiConnection.Item?.uiConnId,
-        })
-      );
-
       // Add an object for tool call the first time we see it
       if (!returnObj.tool_calls[currentToolCall.id]) {
         returnObj.tool_calls[currentToolCall.id] = {
@@ -133,32 +119,20 @@ export async function handlePrompt(promptObj) {
       let last = chunk.choices[0]?.finish_reason === "stop" ? true : false;
 
       // Send content (current chunk content) back to WebSocket & Twilio for TTS
-      await ws_client.send(
-        new PostToConnectionCommand({
-          Data: Buffer.from(
-            JSON.stringify({
-              type: "text",
-              token: chunk.choices[0]?.delta?.content,
-              last: last,
-            })
-          ),
-          ConnectionId: promptObj.ws_connectionId,
-        })
-      );
+      await replyToWS(ws_client, promptObj.ws_connectionId, {
+        type: "text",
+        token: chunk.choices[0]?.delta?.content,
+        last: last,
+      });
 
       // Return LLM Responses to UI here
-      await ui_ws_client.send(
-        new PostToConnectionCommand({
-          Data: Buffer.from(
-            JSON.stringify({
-              type: "text",
-              token: chunk.choices[0]?.delta?.content,
-              last: last,
-            })
-          ),
-          ConnectionId: uiConnection.Item?.uiConnId,
-        })
-      );
+      if (ui_ws_client && uiConnection.Item?.uiConnId) {
+        await replyToWS(ui_ws_client, uiConnection.Item?.uiConnId, {
+          type: "text",
+          token: chunk.choices[0]?.delta?.content,
+          last: last,
+        });
+      }
 
       // Record details from current chunk
       returnObj.content += chunk.choices[0]?.delta?.content || "";
@@ -177,27 +151,22 @@ export async function handlePrompt(promptObj) {
     delete returnObj.tool_calls["undefined"];
   }
 
-  // Return Tool Call Responses to UI here
-  if (
-    returnObj.finish_reason === "tool_calls" &&
-    returnObj.tool_calls.function?.name !== ""
-  ) {
-    await ui_ws_client.send(
-      new PostToConnectionCommand({
-        Data: Buffer.from(
-          JSON.stringify({
-            type: "functionCall",
-            text: `Detected new tool call: ${returnObj.tool_calls?.function?.name} with arguments: ${returnObj.tool_calls?.function?.arguments}`,
-          })
-        ),
-        ConnectionId: uiConnection.Item?.uiConnId,
-      })
-    );
-  }
-
   console.info(
     "In Handle Prompt about to return...\n" + JSON.stringify(returnObj, null, 2)
   );
+
+  // Return Tool Call to UI Client
+  if (
+    returnObj.finish_reason === "tool_calls" &&
+    returnObj.tool_calls[currentToolCallId].function?.name
+  ) {
+    if (ui_ws_client && uiConnection.Item?.uiConnId) {
+      await replyToWS(ui_ws_client, uiConnection.Item?.uiConnId, {
+        type: "functionCall",
+        token: `Detected new tool call: ${returnObj.tool_calls[currentToolCallId].function?.name} with arguments: ${returnObj.tool_calls[currentToolCallId].function?.arguments}`,
+      });
+    }
+  }
 
   return returnObj;
 }
