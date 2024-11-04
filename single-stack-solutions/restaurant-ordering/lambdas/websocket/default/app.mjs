@@ -47,7 +47,11 @@ export const lambdaHandler = async (event, context) => {
   const callConnection = await ddbDocClient.send(
     new GetCommand({
       TableName: process.env.TABLE_NAME,
-      Key: { pk: connectionId, sk: "finalConnection" },
+      Key: {
+        pk: connectionId,
+        // sk: "connection",
+        sk: "finalConnection",
+      },
     })
   );
 
@@ -58,6 +62,7 @@ export const lambdaHandler = async (event, context) => {
   if (body.type === "setup") {
     console.log("uiConnID is: " + body.customParameters.uiConnId);
     let putItem = {
+      // pk: cid,
       pk: event.requestContext.connectionId,
       sk: "uiConnection",
       uiConnId: body.customParameters.uiConnId,
@@ -77,11 +82,15 @@ export const lambdaHandler = async (event, context) => {
   const uiConnection = await ddbDocClient.send(
     new GetCommand({
       TableName: process.env.TABLE_NAME,
-      Key: { pk: connectionId, sk: "uiConnection" },
+      Key: {
+        // pk: cid,
+        pk: connectionId,
+        sk: "uiConnection",
+      },
     })
   );
   let ui_ws_client;
-  if (uiConnection != null) {
+  if (uiConnection) {
     ui_ws_client = new ApiGatewayManagementApiClient({
       endpoint: `https://${ui_ws_domain_name}/${ui_ws_stage}`,
     });
@@ -89,13 +98,6 @@ export const lambdaHandler = async (event, context) => {
       "about to send these messages down the ui websocket: " +
         JSON.stringify(body)
     );
-    // send on initial greeting only
-    // let text = {
-    //   type: "text",
-    //   token: callConnection.Item?.welcomeGreeting,
-    // };
-    // sendMessage(text, ui_ws_client, uiConnection.Item?.uiConnId);
-
     // we always need to check for uiConnection and Uiclient because if calling from PSTN this won't exist
     sendMessage(body, ui_ws_client, uiConnection.Item?.uiConnId);
   }
@@ -142,7 +144,14 @@ export const lambdaHandler = async (event, context) => {
       //console.info("newChatMessage before saving to dynamo\n" + JSON.stringify(newAssistantChatMessage, null, 2));
 
       // Save LLM result prompt to the database
-      await savePrompt(ddbDocClient, connectionId, newAssistantChatMessage);
+      console.log("app.mjs calling save Prompt", callConnection.Item.cid);
+
+      await savePrompt(
+        ddbDocClient,
+        callConnection.Item.cid,
+        // connectionId,
+        newAssistantChatMessage
+      );
 
       // If the LLM Results includes tool call(s), format the results
       // and make the tool calls
@@ -151,6 +160,7 @@ export const lambdaHandler = async (event, context) => {
         let toolCallResult = await makeFunctionCalls(
           ddbDocClient,
           llmResult.tool_calls,
+          // cid,
           connectionId,
           callConnection,
           ws_domain_name,
@@ -167,8 +177,6 @@ export const lambdaHandler = async (event, context) => {
             ddbDocClient: ddbDocClient,
             connectionId: connectionId,
             callConnection: callConnection,
-            ui_ws_client: ui_ws_client,
-            uiConnection: uiConnection,
             ui_ws_client: ui_ws_client,
             uiConnection: uiConnection,
             ws_client: ws_client,

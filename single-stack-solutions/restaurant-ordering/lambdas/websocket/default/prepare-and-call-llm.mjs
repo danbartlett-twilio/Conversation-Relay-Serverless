@@ -16,10 +16,15 @@ export async function prepareAndCallLLM(prepareObj) {
   // and string with timestamp for simple query that
   // returns chronologically sorted results.
   // This is the chat history between system, assistant, tools, user
+  console.log("prepare-and-call-llm prepareObj", prepareObj);
+
   const messages = await returnAllChats(
     prepareObj.ddbDocClient,
-    prepareObj.connectionId
+    // prepareObj.connectionId,
+    prepareObj.callConnection.Item.cid
   );
+
+  console.log("prepare-and-call-llm messages:", messages);
 
   // Set the tool choice to auto which lets the LLM decide
   // whether or not to call a tool. This can be changed if
@@ -41,7 +46,8 @@ export async function prepareAndCallLLM(prepareObj) {
     // Persist the current prompt so it is included in subsequent calls.
     await savePrompt(
       prepareObj.ddbDocClient,
-      prepareObj.connectionId,
+      // prepareObj.connectionId,
+      prepareObj.callConnection.Item.cid,
       newUserChatMessage
     );
 

@@ -31,6 +31,7 @@ export const lambdaHandler = async (event, context) => {
         type: "setup",
         token: connectionId,
       };
+
       console.log("sending setupMessage: " + JSON.stringify(setupMessage));
       await ws_client.send(
         new PostToConnectionCommand({

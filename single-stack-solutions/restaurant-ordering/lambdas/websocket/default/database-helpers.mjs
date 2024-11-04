@@ -15,6 +15,8 @@ import { QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 export async function savePrompt(ddbDocClient, connectionId, newChatMessage) {
   // Persist the current prompt so it is included
   // in subsequent calls.
+
+  console.log("save-prompt inputs", connectionId, newChatMessage);
   let result = await ddbDocClient.send(
     new PutCommand({
       TableName: process.env.TABLE_NAME,
