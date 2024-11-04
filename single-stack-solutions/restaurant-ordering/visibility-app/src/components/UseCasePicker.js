@@ -29,6 +29,7 @@ const UseCasePicker = (props) => {
 
   const useCaseURL = process.env.REACT_APP_GET_USE_CASE_URL;
   const updateURL = process.env.REACT_APP_UPDATE_USE_CASE_URL;
+  const refreshApartmentsURL = process.env.REACT_APP_REFRESH_APARTMENTS_URL;
 
   const [template, setTemplate] = useState("0");
   const [isOpen, setIsOpen] = useState(false);
@@ -132,40 +133,61 @@ const UseCasePicker = (props) => {
   };
 
   const handleUpdate = async (data) => {
-    handleToast(
-      "Your updates are currently being deployed.",
-      "neutral",
-      3000,
-      "neutralId"
-    );
+    // handleToast(
+    //   "Your updates are currently being deployed.",
+    //   "neutral",
+    //   3000,
+    //   "neutralId"
+    // );
 
     try {
       await axios.post(updateURL, data);
       toaster.pop("neutralId");
-      handleToast(
-        "Success! Your updates succeeded",
-        "success",
-        3000,
-        "successId"
-      );
+      // handleToast(
+      //   "Success! Your updates succeeded",
+      //   "success",
+      //   3000,
+      //   "successId"
+      // );
     } catch (e) {
       console.log("Error", e);
-      handleToast(
-        "Unfortunately we ran into an error",
-        "error",
-        3000,
-        "errorId"
-      );
+      // handleToast(
+      //   "Unfortunately we ran into an error",
+      //   "error",
+      //   3000,
+      //   "errorId"
+      // );
     }
   };
 
   const resetDemo = async () => {
+    handleToast(
+      "Refreshing apartment data and resetting use case configuration",
+      "neutral",
+      3000,
+      "resetDemo"
+    );
     setConfig(initialConfiguration);
     initialConfiguration.forEach((item) => {
       console.log(item);
       setVoice(voiceOptions[item.conversationRelayParams.ttsProvider]); //voiceOptions(google or amazon)
       handleUpdate(item);
     });
+    try {
+      const refreshApartments = await axios.post(refreshApartmentsURL);
+      console.log(refreshApartments);
+      toaster.pop("resetDemo");
+      handleToast("Refreshed data!", "success", 3000, "resetDemoSuccess");
+    } catch (e) {
+      console.log(e);
+      toaster.pop("resetDemo");
+      handleToast(
+        "There was an error refreshing data",
+        "error",
+        3000,
+        "resetDemoError"
+      );
+    }
   };
 
   useEffect(() => {
@@ -185,7 +207,7 @@ const UseCasePicker = (props) => {
       <Toaster {...toaster} />
       <Stack orientation="horizontal" spacing="space60">
         <Button onClick={resetDemo} variant="secondary">
-          Reset Use Cases
+          Reset Demo
         </Button>
         <Button onClick={callTo} variant="primary">
           Call <CallIcon decorative={false} title="make call" />
