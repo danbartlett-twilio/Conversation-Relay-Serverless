@@ -14,13 +14,11 @@ function setupCallEventHandlers(call) {
   call.on("cancel", function (conn) {
     console.log("Call cancel");
     // activeCall = undefined;
-    console.log("ready");
   });
 
   call.on("reject", function (conn) {
     console.log("Call reject");
     // activeCall = undefined;
-    console.log("ready");
   });
 
   call.on("accept", function (conn) {

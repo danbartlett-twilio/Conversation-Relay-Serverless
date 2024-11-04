@@ -55,7 +55,10 @@ export const lambdaHandler = async (event, context) => {
 
   //twilio_body.pk passed in from client or use default defined in template.yaml
 
-  const useCaseTitle = twilio_body.useCaseTitle || process.env.STACK_USE_CASE;
+  const useCaseTitle =
+    twilio_body.useCaseTitle || // passed in from client
+    userContext.useCase || // if PSTN call then look up profile (if exists and use this use case)
+    process.env.STACK_USE_CASE; // set in template.yaml file
   const useCase = await ddbDocClient.send(
     new GetCommand({
       TableName: process.env.TABLE_NAME,

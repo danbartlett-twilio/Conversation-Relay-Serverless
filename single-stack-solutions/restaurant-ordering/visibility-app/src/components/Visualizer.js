@@ -53,11 +53,11 @@ const Visualizer = forwardRef((props, ref) => {
         message = JSON.stringify(data) + "\n";
       }
       if (data.type === "interrupt") {
-        message = JSON.stringify(data) + "\n";
+        message = JSON.stringify(data);
       }
       if (data.type === "prompt" && data.voicePrompt) {
         // User
-        message = data.voicePrompt + "\n";
+        message = "\n" + data.voicePrompt + "\n";
       }
       if (data.type === "text" && data.token) {
         // Agent

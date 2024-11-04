@@ -119,7 +119,8 @@ export async function prepareAndCallLLM(prepareObj) {
       // Persist the current prompt so it is included in subsequent calls.
       await savePrompt(
         prepareObj.ddbDocClient,
-        prepareObj.connectionId,
+        prepareObj.callConnection.Item.cid,
+        // prepareObj.connectionId,
         prepareObj.newUserDTMFMessage
       );
 

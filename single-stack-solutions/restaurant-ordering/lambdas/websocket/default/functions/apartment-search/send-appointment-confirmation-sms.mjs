@@ -23,9 +23,16 @@ async function sendMessage(tool) {
       : "a self-guided";
   const message = `Hi ${name}, your tour for a ${apartmentType} apartment at Parkview is confirmed for ${args.appointmentDetails.date} at ${args.appointmentDetails.time}. This will be ${tourType} tour. We'll be ready for your visit! Let us know if you have any questions.`;
 
+  // Check if client call
+  if (tool.call_details.to_phone === "test:conversationRelay") {
+    // hardcoded for now will need to update
+    tool.call_details.from_phone = "+16477782422"; //could get this from setting a profile (or asking for userContext on call)
+    tool.call_details.to_phone = "+12492027920";
+  }
+
   let snsPayload = {
     MessageBody: message,
-    From: tool.call_details.to_phone, // The "to" is the Twilio number (sender)
+    From: tool.call_details.to_phone, // The "to" is the Twilio number (sender) //update to userContext.number
     To: tool.call_details.from_phone, // The "from" is the user's phone number (recipient)
   };
 

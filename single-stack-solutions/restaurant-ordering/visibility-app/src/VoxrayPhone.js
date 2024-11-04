@@ -3,6 +3,7 @@ import axios from "axios";
 import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
 import audiovisualizer from "./templates/audiovisualizer";
+import DBProfile from "./components/DBProfile";
 // import ReactAudioVisualizer from "./components/ReactAudioVisualizer";
 
 // Twilio Paste
@@ -36,6 +37,7 @@ export const VoxrayPhone = () => {
 
     device.on("unregistered", (dev) => {
       console.log("Device unregistered\n");
+      setDevice(undefined);
     });
 
     device.on("tokenWillExpire", (dev) => {
@@ -44,10 +46,12 @@ export const VoxrayPhone = () => {
 
     device.on("error", (dev) => {
       console.log("Device encountered error\n");
+      setDevice(undefined);
     });
 
     device.on("destroyed", (dev) => {
       console.log("Device destroyed\n");
+      setDevice(undefined);
     });
   };
 
@@ -89,6 +93,7 @@ export const VoxrayPhone = () => {
               <Heading as="h2" variant="heading20">
                 ConversationRelay Test Client
               </Heading>
+              <DBProfile />
               <UseCasePicker device={device} />
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>

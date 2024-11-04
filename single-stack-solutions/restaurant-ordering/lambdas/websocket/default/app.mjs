@@ -129,7 +129,10 @@ export const lambdaHandler = async (event, context) => {
         refusal: llmResult.refusal,
       };
 
-      // ui_messages.push({ type: "text", token: llmResult.content });
+      // let toolAssistantChatMessage = {
+      //   role: "tool",
+      //   content: '{"result":"tool was called"}',
+      // };
 
       // If tool_calls are present, convert the tool call object to
       // an array to adhere to llm chat messaging format
@@ -139,17 +142,30 @@ export const lambdaHandler = async (event, context) => {
         newAssistantChatMessage.tool_calls = Object.values(
           llmResult.tool_calls
         );
+
+        // we need to add tool message after calling tool call result
+        // toolAssistantChatMessage.name = Object.values(
+        //   llmResult.tool_calls
+        // )[0].id;
+
+        // toolAssistantChatMessage.tool_call_id = Object.values(
+        //   llmResult.tool_calls
+        // )[0].function.name;
+
+        // console.info(
+        //   "toolAssistantChatMessage before saving to dynamo\n" +
+        //     JSON.stringify(toolAssistantChatMessage, null, 2)
+        // );
       }
 
-      //console.info("newChatMessage before saving to dynamo\n" + JSON.stringify(newAssistantChatMessage, null, 2));
-
-      // Save LLM result prompt to the database
-      console.log("app.mjs calling save Prompt", callConnection.Item.cid);
+      console.info(
+        "newChatMessage before saving to dynamo\n" +
+          JSON.stringify(newAssistantChatMessage, null, 2)
+      );
 
       await savePrompt(
         ddbDocClient,
         callConnection.Item.cid,
-        // connectionId,
         newAssistantChatMessage
       );
 
@@ -160,8 +176,8 @@ export const lambdaHandler = async (event, context) => {
         let toolCallResult = await makeFunctionCalls(
           ddbDocClient,
           llmResult.tool_calls,
-          // cid,
-          connectionId,
+          callConnection.Item.cid,
+          // connectionId,
           callConnection,
           ws_domain_name,
           ws_stage
