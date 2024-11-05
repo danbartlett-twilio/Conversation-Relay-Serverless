@@ -61,7 +61,7 @@ export const lambdaHandler = async (event, context) => {
               cid: event.queryStringParameters.cid,
               pk: event.requestContext.connectionId,
               // pk1: "connection",
-              // sk1: obj.From,
+              sk1: obj.From,
               sk: "finalConnection",
               pk1: "finalConnection",
               expireAt: parseInt(Date.now() / 1000 + 86400), // Expire "demo" session data automatically (can be removed)

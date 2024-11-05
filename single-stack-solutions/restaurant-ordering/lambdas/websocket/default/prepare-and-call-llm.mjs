@@ -20,7 +20,6 @@ export async function prepareAndCallLLM(prepareObj) {
 
   const messages = await returnAllChats(
     prepareObj.ddbDocClient,
-    // prepareObj.connectionId,
     prepareObj.callConnection.Item.cid
   );
 

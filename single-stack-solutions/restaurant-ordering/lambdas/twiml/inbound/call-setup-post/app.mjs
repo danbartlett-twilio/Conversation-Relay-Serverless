@@ -150,7 +150,7 @@ export const lambdaHandler = async (event, context) => {
         role: "system",
         content: prompt,
       },
-      expireAt: Math.floor(Date.now() / 1000) + 1200, // Delete Record after 20 minutes
+      expireAt: Math.floor(Date.now() / 1000) + 120, // Delete Record after 2 minutes
     };
 
     console.log("prompt item is", promptItem);
