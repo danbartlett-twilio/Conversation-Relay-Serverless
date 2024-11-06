@@ -18,9 +18,19 @@ export async function prepareAndCallLLM(prepareObj) {
   // This is the chat history between system, assistant, tools, user
   console.log("prepare-and-call-llm prepareObj", prepareObj);
 
+  let connectionId;
+  // Check if client call or PSTN call
+  if (prepareObj.callConnection.Item.From === "client:test:conversationRelay") {
+    connectionId = prepareObj.callConnection.Item.cid;
+  } else {
+    connectionId = prepareObj.connectionId;
+  }
+
   const messages = await returnAllChats(
     prepareObj.ddbDocClient,
-    prepareObj.callConnection.Item.cid
+    // prepareObj.connectionId,
+    // prepareObj.callConnection.Item.cid
+    connectionId
   );
 
   console.log("prepare-and-call-llm messages:", messages);
@@ -46,7 +56,8 @@ export async function prepareAndCallLLM(prepareObj) {
     await savePrompt(
       prepareObj.ddbDocClient,
       // prepareObj.connectionId,
-      prepareObj.callConnection.Item.cid,
+      // prepareObj.callConnection.Item.cid,
+      connectionId,
       newUserChatMessage
     );
 
@@ -118,8 +129,9 @@ export async function prepareAndCallLLM(prepareObj) {
       // Persist the current prompt so it is included in subsequent calls.
       await savePrompt(
         prepareObj.ddbDocClient,
-        prepareObj.callConnection.Item.cid,
+        // prepareObj.callConnection.Item.cid,
         // prepareObj.connectionId,
+        connectionId,
         prepareObj.newUserDTMFMessage
       );
 
@@ -151,8 +163,8 @@ export async function prepareAndCallLLM(prepareObj) {
   return await handlePrompt({
     ws_endpoint: `${prepareObj.ws_domain_name}/${prepareObj.ws_stage}`,
     ws_connectionId: prepareObj.connectionId,
-    ui_ws_client: prepareObj.ui_ws_client,
-    uiConnection: prepareObj.uiConnection,
+    ui_ws_client: prepareObj?.ui_ws_client,
+    uiConnection: prepareObj?.uiConnection,
     messages: messages,
     callConnection: prepareObj.callConnection.Item,
     toolCallCompletion: prepareObj.toolCallCompletion,

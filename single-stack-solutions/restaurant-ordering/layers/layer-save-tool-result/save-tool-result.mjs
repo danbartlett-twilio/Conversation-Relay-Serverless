@@ -1,7 +1,7 @@
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 
 async function saveToolResult(ddbDocClient, evt, toolResult) {
-  console.log("save tool result called with event", evt);
+  console.log("save tool result called with event", evt, toolResult);
 
   let finalResult = {
     role: "tool",

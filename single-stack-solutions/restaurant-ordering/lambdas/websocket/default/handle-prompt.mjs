@@ -14,7 +14,7 @@ import { replyToWS } from "./reply-to-ws.mjs";
 export async function handlePrompt(promptObj) {
   let model = process.env.LLM_MODEL ? process.env.LLM_MODEL : "gpt-4o-mini"; // "gpt-4-turbo";
 
-  console.log(promptObj);
+  console.log("handle-prompt promptObj:", promptObj);
 
   // SET THE PROMPT TO OPENAI
   const prompt = {
@@ -22,8 +22,6 @@ export async function handlePrompt(promptObj) {
     model: model,
     stream: true,
   };
-
-  console.log("prompt is ", prompt);
 
   let tool_choice = promptObj?.tool_choice ? promptObj?.tool_choice : "auto";
   // tool_choice can be string or object
@@ -46,8 +44,10 @@ export async function handlePrompt(promptObj) {
   // Declare WebSocket client to return text to Twilio
   // Client is instantiated in parent lambda.
   const ws_client = promptObj.ws_client;
-  const ui_ws_client = promptObj.ui_ws_client;
-  const uiConnection = promptObj.uiConnection;
+
+  // Will be undefined is PSTN call
+  const ui_ws_client = promptObj?.ui_ws_client;
+  const uiConnection = promptObj?.uiConnection;
 
   let currentToolCallId = null; // Needed to support multiple tool calls
 
@@ -125,9 +125,9 @@ export async function handlePrompt(promptObj) {
         last: last,
       });
 
-      // Return LLM Responses to UI here
-      if (ui_ws_client && uiConnection.Item?.uiConnId) {
-        await replyToWS(ui_ws_client, uiConnection.Item?.uiConnId, {
+      // Return LLM Responses to UI here if UI connection exists
+      if (ui_ws_client && uiConnection?.Item.uiConnId) {
+        await replyToWS(ui_ws_client, uiConnection.Item.uiConnId, {
           type: "text",
           token: chunk.choices[0]?.delta?.content,
           last: last,
@@ -160,7 +160,7 @@ export async function handlePrompt(promptObj) {
     returnObj.finish_reason === "tool_calls" &&
     returnObj.tool_calls[currentToolCallId].function?.name
   ) {
-    if (ui_ws_client && uiConnection.Item?.uiConnId) {
+    if (ui_ws_client && uiConnection?.Item.uiConnId) {
       await replyToWS(ui_ws_client, uiConnection.Item?.uiConnId, {
         type: "functionCall",
         token: `Detected new tool call: ${returnObj.tool_calls[currentToolCallId].function?.name} with arguments: ${returnObj.tool_calls[currentToolCallId].function?.arguments}`,
