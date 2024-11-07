@@ -44,75 +44,120 @@ During the guided deployment, you'll need to provide:
 
 ## Conversation Context and Tools
 
-The AI's behavior and available tools are defined in `configuration/dynamo-item.json`. This file contains:
+The solution uses two main configuration files that work together:
 
-1. **Conversation Context**: The `prompt` field defines:
-   - AI's persona (Joules, an Energy company phone operator)
-   - Style guidelines for responses
-   - Specific instructions for handling verification
-   - Step-by-step validation process
+### 1. DynamoDB Item (configuration/dynamo-item.json)
 
-2. **Available Tools**: The `tools` array defines functions the AI can use:
-   - get-customer: Retrieves customer details
-   - verify-send: Sends verification codes
-   - verify-code: Validates codes
-   - live-agent-handoff: Transfers to human agents
+This file defines what the AI can do and how it behaves:
 
-### Modifying the Context
+```json
+{
+  "prompt": "# Objective\nYour name is Joules...",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get-customer",
+        "description": "Retrieves customer details...",
+        "parameters": {
+          // Parameter definitions
+        }
+      }
+    }
+    // More tools...
+  ]
+}
+```
 
-To modify how the AI behaves:
+### 2. Function Manifest (configuration/function-manifest.js)
 
-1. Edit `configuration/dynamo-item.json`:
-   ```json
-   {
-     "prompt": "# Objective\nYour name is [NAME] and you are...",
-     "tools": [
-       // Tool definitions
-     ]
-   }
-   ```
+This file maps the tools to their Lambda function implementations:
 
-2. Common modifications:
-   - Change the AI's name and role
-   - Modify verification steps
-   - Add or remove style guidelines
-   - Adjust response patterns
-   - Update validation requirements
+```javascript
+module.exports = {
+    functions: {
+        'get-customer': {
+            description: 'Retrieves customer details based on phone number',
+            handler: 'util/get-customer/app.handler',
+            memorySize: 256,
+            timeout: 30,
+            environment: {
+                DYNAMODB_TABLE: process.env.DYNAMODB_TABLE
+            }
+        },
+        'verify-send': {
+            description: 'Sends verification code via SMS',
+            handler: 'util/verify-send/app.handler',
+            memorySize: 256,
+            timeout: 30,
+            environment: {
+                DYNAMODB_TABLE: process.env.DYNAMODB_TABLE,
+                TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+                TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN
+            }
+        }
+        // More function definitions...
+    },
+    layers: [
+        'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:layer-cr-dynamodb-util:latest',
+        'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:layer-cr-open-ai-client:latest',
+        'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:layer-cr-twilio-client:latest',
+        'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:layer:layer-save-tool-result:latest'
+    ]
+}
+```
 
-3. After modifying:
-   - Redeploy the stack to update DynamoDB
-   - Or manually update the DynamoDB item with key:
-     - pk: "USE_CASE#CR_CALLER_VERIFICATION"
-     - sk: "CONFIG#LATEST"
+### Adding New Tools
 
-### Adding/Modifying Tools
+To add a new tool:
 
-To add or modify available tools:
+1. Add the tool definition to `dynamo-item.json`:
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "new-tool-name",
+    "description": "What the tool does",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "param1": {
+          "type": "string",
+          "description": "Parameter description"
+        }
+      },
+      "required": ["param1"]
+    }
+  }
+}
+```
 
-1. Add the tool definition in `dynamo-item.json`:
-   ```json
-   {
-     "type": "function",
-     "function": {
-       "name": "new-tool-name",
-       "description": "What the tool does",
-       "parameters": {
-         "type": "object",
-         "properties": {
-           "param1": {
-             "type": "string",
-             "description": "Parameter description"
-           }
-         },
-         "required": ["param1"]
-       }
-     }
-   }
-   ```
+2. Add the function implementation to `function-manifest.js`:
+```javascript
+'new-tool-name': {
+    description: 'Tool description',
+    handler: 'util/new-tool-name/app.handler',
+    memorySize: 256,
+    timeout: 30,
+    environment: {
+        DYNAMODB_TABLE: process.env.DYNAMODB_TABLE
+        // Add any other required environment variables
+    }
+}
+```
 
-2. Implement the corresponding Lambda function in `lambdas/util/`
-3. Add the function to `template.yaml` with appropriate layers
-4. Update `function-manifest.js` to include the new function
+3. Create the Lambda function implementation in `lambdas/util/new-tool-name/app.mjs`
+
+4. Update the prompt in `dynamo-item.json` to instruct the AI how to use the new tool
+
+### Modifying Existing Tools
+
+To modify an existing tool:
+
+1. Update the tool definition in `dynamo-item.json` if changing parameters or behavior
+2. Update the function configuration in `function-manifest.js` if changing runtime settings
+3. Modify the Lambda function implementation if changing functionality
+4. Update the prompt in `dynamo-item.json` if the tool's usage instructions need to change
 
 ## Architecture
 
