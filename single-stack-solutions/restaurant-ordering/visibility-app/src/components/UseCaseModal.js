@@ -42,6 +42,9 @@ export function UseCaseModal(props) {
   const isOpen = props.isOpen;
   const handleConfigUpdate = props.handleConfigUpdate;
   const handleVoiceUpdate = props.handleVoiceUpdate;
+  const speechModelOptions = props.speechModelOptions;
+  const transcriptionProvider = props.transcriptionProvider;
+  const handleTranscriptionUpdate = props.handleTranscriptionUpdate;
 
   const handleUpdate = async (e) => {
     // e.preventDefault();
@@ -53,6 +56,7 @@ export function UseCaseModal(props) {
     );
 
     let data = config[template];
+    console.log(data.conversationRelayParams);
 
     const updateURL =
       "https://96r3z8mzvc.execute-api.us-east-1.amazonaws.com/update-use-cases";
@@ -204,10 +208,20 @@ export function UseCaseModal(props) {
                       template
                     ].conversationRelayParams.transcriptionProvider =
                       e.target.value;
+
+                    updatedConfig[
+                      template
+                    ].conversationRelayParams.speechModel =
+                      speechModelOptions[e.target.value][0];
+
                     handleConfigUpdate(updatedConfig);
+                    handleTranscriptionUpdate(
+                      speechModelOptions[e.target.value]
+                    );
                   }}
                 >
                   <Option value="google">google</Option>
+                  <Option value="deepgram">deepgram</Option>
                 </Select>
               </FormControl>
               <FormControl>
@@ -226,7 +240,17 @@ export function UseCaseModal(props) {
                     handleConfigUpdate(updatedConfig);
                   }}
                 >
-                  <Option value="telephony">telephony</Option>
+                  {/* Options are dependent on transcprtion provider  */}
+                  {/* {console.log(transcriptionProvider)} */}
+                  {transcriptionProvider.map((option, index) => (
+                    <Option key={index} value={option}>
+                      {option}
+                    </Option>
+                  ))}
+                  {/* <Option value="telephony">google: telephony</Option>
+                  <Option value="nova-2-general">
+                    deepgram: nova-2-general
+                  </Option> */}
                 </Select>
               </FormControl>
               <FormControl>

@@ -10,8 +10,8 @@ export const initialConfiguration = [
       interruptible: true,
       language: "en-US",
       profanityFilter: true,
-      speechModel: "telephony",
-      transcriptionProvider: "google",
+      speechModel: "nova-2-general",
+      transcriptionProvider: "deepgram",
       ttsProvider: "amazon",
       voice: "Amy-Generative",
       welcomeGreeting:
@@ -104,8 +104,8 @@ Remember that all replies should be returned in plain text. Do not return markdo
       interruptible: true,
       language: "en-US",
       profanityFilter: true,
-      speechModel: "telephony",
-      transcriptionProvider: "google",
+      speechModel: "nova-2-general",
+      transcriptionProvider: "deepgram",
       ttsProvider: "google",
       voice: "en-US-Journey-O",
       welcomeGreeting:

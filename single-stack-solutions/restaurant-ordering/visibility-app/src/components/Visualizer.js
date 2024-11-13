@@ -21,6 +21,7 @@ const Visualizer = forwardRef((props, ref) => {
     },
     invokeCloseWebsockToController() {
       closeWebsockToController();
+      console.log("Websocket connection closed");
     },
   }));
 
@@ -42,7 +43,7 @@ const Visualizer = forwardRef((props, ref) => {
       const data = JSON.parse(event.data);
       console.log(data);
 
-      if (data.type === "setup") {
+      if (data.type === "setup" && data.token) {
         updateWebsocketId(data.token);
         message = "";
       }

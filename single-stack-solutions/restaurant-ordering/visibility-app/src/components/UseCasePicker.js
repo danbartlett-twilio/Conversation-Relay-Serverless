@@ -39,6 +39,7 @@ const UseCasePicker = (props) => {
   let websocketId;
 
   const device = props.device;
+  const loading = props.loading;
 
   const [voice, setVoice] = useState([]);
   const voiceOptions = {
@@ -51,6 +52,12 @@ const UseCasePicker = (props) => {
       "ja-JP-Neural2-B",
     ],
     amazon: ["Amy-Generative", "Matthew-Generative"],
+  };
+
+  const [transcriptionProvider, setTranscriptionProvider] = useState([]);
+  const speechModelOptions = {
+    google: ["telephony"],
+    deepgram: ["nova-2-general"],
   };
 
   const toaster = useToaster();
@@ -71,10 +78,18 @@ const UseCasePicker = (props) => {
     setVoice(
       voiceOptions[config[template].conversationRelayParams.ttsProvider]
     );
+    setTranscriptionProvider(
+      speechModelOptions[
+        config[template].conversationRelayParams.transcriptionProvider
+      ]
+    );
   };
   const handleConfigUpdate = (updatedConfig) => setConfig(updatedConfig);
   const handleVoiceUpdate = (updatedVoiceOptions) =>
     setVoice(updatedVoiceOptions);
+
+  const handleTranscriptionUpdate = (updatedSpeechModelOptions) =>
+    setTranscriptionProvider(updatedSpeechModelOptions);
 
   const updateWebsocketId = (newId) => {
     console.log("updating websocket ID to: " + newId);
@@ -147,11 +162,12 @@ const UseCasePicker = (props) => {
     if (activeCall) {
       return;
     } else {
-      if (!websocketId) {
-        if (visualizerRef.current && !websocketId) {
-          console.log("Initializing websocket connection");
-          visualizerRef.current.invokeSetupWebsockToController();
-        }
+      // if (!websocketId) {
+      // we also need to check if websocket connection exists or we can set websocket id to null
+      if (visualizerRef.current && !websocketId) {
+        console.log("Initializing websocket connection");
+        visualizerRef.current.invokeSetupWebsockToController();
+        // }
       } else {
         if (!device) {
           handleToast(
@@ -193,30 +209,11 @@ const UseCasePicker = (props) => {
   };
 
   const handleUpdate = async (data) => {
-    // handleToast(
-    //   "Your updates are currently being deployed.",
-    //   "neutral",
-    //   3000,
-    //   "neutralId"
-    // );
-
     try {
-      await axios.post(updateURL, data);
-      toaster.pop("neutralId");
-      // handleToast(
-      //   "Success! Your updates succeeded",
-      //   "success",
-      //   3000,
-      //   "successId"
-      // );
+      const res = await axios.post(updateURL, data);
+      console.log(res);
     } catch (e) {
       console.log("Error", e);
-      // handleToast(
-      //   "Unfortunately we ran into an error",
-      //   "error",
-      //   3000,
-      //   "errorId"
-      // );
     }
   };
 
@@ -229,8 +226,10 @@ const UseCasePicker = (props) => {
     );
     setConfig(initialConfiguration);
     initialConfiguration.forEach((item) => {
-      console.log(item);
       setVoice(voiceOptions[item.conversationRelayParams.ttsProvider]); //voiceOptions(google or amazon)
+      setTranscriptionProvider(
+        speechModelOptions[item.conversationRelayParams.transcriptionProvider]
+      );
       handleUpdate(item);
     });
     try {
@@ -266,13 +265,13 @@ const UseCasePicker = (props) => {
     <div>
       <Toaster {...toaster} />
       <Stack orientation="horizontal" spacing="space60">
-        <Button onClick={resetDemo} variant="secondary">
+        <Button onClick={resetDemo} variant="secondary" loading={loading}>
           Reset Demo
         </Button>
-        <Button onClick={callTo} variant="primary">
+        <Button onClick={callTo} variant="primary" loading={loading}>
           Call <CallIcon decorative={false} title="make call" />
         </Button>
-        <Button onClick={hangupCall} variant="destructive">
+        <Button onClick={hangupCall} variant="destructive" loading={loading}>
           Disconnect
           <CallFailedIcon decorative={false} title="Description of icon" />
         </Button>
@@ -287,6 +286,9 @@ const UseCasePicker = (props) => {
         handleClose={handleClose}
         handleConfigUpdate={handleConfigUpdate}
         handleVoiceUpdate={handleVoiceUpdate}
+        speechModelOptions={speechModelOptions}
+        transcriptionProvider={transcriptionProvider}
+        handleTranscriptionUpdate={handleTranscriptionUpdate}
       />
       <VisualPickerRadioGroup
         legend="Select Use Case"

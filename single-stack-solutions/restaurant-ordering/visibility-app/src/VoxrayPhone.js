@@ -3,7 +3,8 @@ import axios from "axios";
 import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
 import audiovisualizer from "./templates/audiovisualizer";
-import DBProfile from "./components/DBProfile";
+import AudioDevices from "./components/AudioDevices";
+// import DBProfile from "./components/DBProfile";
 // import ReactAudioVisualizer from "./components/ReactAudioVisualizer";
 
 // Twilio Paste
@@ -16,6 +17,7 @@ export const VoxrayPhone = () => {
   // let voiceToken;
   // let device;
   const [device, setDevice] = useState(); //consider changing to useRef?
+  const [loading, setLoading] = useState(true);
   // const device = useRef(null);
 
   let voiceToken = useRef("");
@@ -78,6 +80,7 @@ export const VoxrayPhone = () => {
       // device.current = myDevice;
       // console.log("ref is ", device.current);
       setDevice(myDevice);
+      setLoading(false);
       myDevice.register();
       registerTwilioDeviceHandlers(myDevice);
     };
@@ -92,9 +95,10 @@ export const VoxrayPhone = () => {
             <Box padding="space50">
               <Heading as="h2" variant="heading20">
                 ConversationRelay Test Client
+                {/* <AudioDevices /> */}
               </Heading>
-              <DBProfile />
-              <UseCasePicker device={device} />
+              {/* <DBProfile /> */}
+              <UseCasePicker device={device} loading={loading} />
               <Label htmlFor="audio-visualizer">Audio Visualizer</Label>
               <canvas id="audio-visualizer"></canvas>
               {/* <ReactAudioVisualizer /> */}
