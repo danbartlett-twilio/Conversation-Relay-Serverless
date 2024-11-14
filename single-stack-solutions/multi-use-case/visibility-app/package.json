@@ -6,23 +6,24 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "@twilio-paste/core": "^20.15.0",
+    "@twilio-paste/core": "^20.18.1",
     "@twilio-paste/icons": "^12.7.0",
     "@twilio/voice-sdk": "^2.12.1",
+    "axios": "^1.7.7",
     "react": "^18.3.1",
     "react-audio-visualize": "^1.2.0",
     "react-audio-voice-recorder": "^2.2.0",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
     "react-use-websocket": "^4.8.1",
-    "web-vitals": "^2.1.4",
-    "axios": "^1.7.7"
+    "web-vitals": "^2.1.4"
   },
   "proxy": "http://localhost:3001",
   "scripts": {
     "start": "react-scripts start",
     "dev": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "node scripts/outputs.js && react-scripts build",
+    "deploy": "node scripts/deploy.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

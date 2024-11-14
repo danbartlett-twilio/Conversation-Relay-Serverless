@@ -3,7 +3,7 @@ import axios from "axios";
 import { Device } from "@twilio/voice-sdk";
 import "./styles/VoxrayPhone.css";
 import audiovisualizer from "./templates/audiovisualizer";
-import AudioDevices from "./components/AudioDevices";
+// import AudioDevices from "./components/AudioDevices";
 // import DBProfile from "./components/DBProfile";
 // import ReactAudioVisualizer from "./components/ReactAudioVisualizer";
 
@@ -14,11 +14,8 @@ import { Box, Heading, Label } from "@twilio-paste/core";
 import UseCasePicker from "./components/UseCasePicker";
 
 export const VoxrayPhone = () => {
-  // let voiceToken;
-  // let device;
-  const [device, setDevice] = useState(); //consider changing to useRef?
+  const [device, setDevice] = useState();
   const [loading, setLoading] = useState(true);
-  // const device = useRef(null);
 
   let voiceToken = useRef("");
 
@@ -74,11 +71,9 @@ export const VoxrayPhone = () => {
     registerVoiceClient();
     const createVoiceDevice = async () => {
       const myDevice = await new Device(voiceToken.current, {
-        logLevel: 5, // 5 disables all logs
+        logLevel: 4,
         codecPreferences: ["opus", "pcmu"],
       });
-      // device.current = myDevice;
-      // console.log("ref is ", device.current);
       setDevice(myDevice);
       setLoading(false);
       myDevice.register();
