@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const getCloudFormationOuputValue = (key) => {
   const command = `
     aws cloudformation describe-stacks \
-        --stack-name CR-RESTAURANT-ORDERING \
+        --stack-name CR-MULTI-USE-CASE \
         --no-paginate \
         --no-cli-pager \
         --output text \
