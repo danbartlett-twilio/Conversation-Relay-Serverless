@@ -56,10 +56,9 @@ export function UseCaseModal(props) {
     );
 
     let data = config[template];
-    console.log(data.conversationRelayParams);
+    console.log(data);
 
-    const updateURL =
-      "https://96r3z8mzvc.execute-api.us-east-1.amazonaws.com/update-use-cases";
+    const updateURL = process.env.REACT_APP_UPDATE_USE_CASE_URL;
 
     try {
       await axios.post(updateURL, data);
@@ -240,17 +239,17 @@ export function UseCaseModal(props) {
                     handleConfigUpdate(updatedConfig);
                   }}
                 >
-                  {/* Options are dependent on transcprtion provider  */}
+                  {/* Options are dependent on transcriptionProvider  */}
                   {/* {console.log(transcriptionProvider)} */}
-                  {transcriptionProvider.map((option, index) => (
+                  {/* {transcriptionProvider.map((option, index) => (
                     <Option key={index} value={option}>
                       {option}
                     </Option>
-                  ))}
-                  {/* <Option value="telephony">google: telephony</Option>
+                  ))} */}
+                  <Option value="telephony">google: telephony</Option>
                   <Option value="nova-2-general">
                     deepgram: nova-2-general
-                  </Option> */}
+                  </Option>
                 </Select>
               </FormControl>
               <FormControl>
