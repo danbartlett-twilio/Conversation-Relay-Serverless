@@ -17,7 +17,8 @@ cd single-stack-solutions/multi-use-case
 
 run sam build and deploy commands
 ```bash
-
+chmod 755 build.sh 
+./build.sh 
 sam build
 sam deploy --resolve-s3 --stack-name CR-MULTI-USE-CASE --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM
 ```
