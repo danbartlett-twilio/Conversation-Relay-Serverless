@@ -1013,21 +1013,6 @@ Outputs:
   TwimlAPI:
     Description: "URL to use to configure Voice Handler for Twilio Phone Number (returns TwiML!)"
     Value: !Sub "https://${TwimlAPI}.execute-api.${AWS::Region}.amazonaws.com/call-setup-restaurant-ordering"
-  RegisterVoiceClientAPI:
-    Description: "API for registering voice client"
-    Value: !Sub "https://${RegisterVoiceClientAPI}.execute-api.${AWS::Region}.amazonaws.com/register-voice-client"
-  GetUseCasesAPI:
-    Description: "API for getting use cases for react client"
-    Value: !Sub "https://${GetUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-use-cases"
-  UpdateUseCasesAPI:
-    Description: "API for getting use cases for react client"
-    Value: !Sub "https://${UpdateUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/update-use-cases"
-  GetProfilesAPI:
-    Description: "API for getting profiles for react client"
-    Value: !Sub "https://${GetProfilesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-profiles"
-  RefreshApartmentsAPI:
-    Description: "API for getting profiles for react client"
-    Value: !Sub "https://${RefreshApartmentsAPI}.execute-api.${AWS::Region}.amazonaws.com/refresh-apartments"
   GetCallsAPI:
     Description: "API for getCalls"
     Value: !Sub "https://${GetCallsAPI}.execute-api.${AWS::Region}.amazonaws.com/"
@@ -1099,3 +1084,19 @@ Outputs:
       ]
     Export:
       Name: "UIWebsocketEndpoint"
+  GetProfilesAPI:
+    Description: "API for getting profiles for react client"
+    Value: !Sub "https://${GetProfilesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-profiles"
+  GetUseCasesAPI:
+    Description: "API for getting use cases for react client"
+    Value: !Sub "https://${GetUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/get-use-cases"
+  UpdateUseCasesAPI:
+    Description: "API for getting use cases for react client"
+    Value: !Sub "https://${UpdateUseCasesAPI}.execute-api.${AWS::Region}.amazonaws.com/update-use-cases"
+  RegisterVoiceClientAPI:
+    Description: "API for registering voice client"
+    Value: !Sub "https://${RegisterVoiceClientAPI}.execute-api.${AWS::Region}.amazonaws.com/register-voice-client"
+  RefreshApartmentsAPI:
+    Description: "API for getting profiles for react client"
+    Value: !Sub "https://${RefreshApartmentsAPI}.execute-api.${AWS::Region}.amazonaws.com/refresh-apartments"
+  
