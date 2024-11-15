@@ -1052,7 +1052,7 @@ Outputs:
   # CRWebSocketApi:
   #   Description: "ARN to the Web Socket API Gateway"
   #   Value: !Ref CRWebSocketApi
-  # CRWebSocketURL:
+  CRWebSocketURL:
     Description: "The WSS Protocol URL to connect to"
     Value:
       !Join [
