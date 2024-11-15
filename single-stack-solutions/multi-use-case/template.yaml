@@ -965,10 +965,7 @@ Resources:
       Description: Prod Stage
       DeploymentId: !Ref UIDeployment
       ApiId: !Ref UIWebSocketApi
-  VisiblityUIEventsTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub "${AWS::StackName}-VisiblityUIEventsTopic"
+
   WebAppS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
