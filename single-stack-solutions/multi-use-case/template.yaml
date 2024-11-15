@@ -972,7 +972,20 @@ Resources:
   WebAppS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "cr-ui-web-app-s3-bucket-ben"
+      BucketName: !Join 
+        - '-'
+        - - !Ref AWS::AccountId
+          - !Ref AWS::Region
+          - 'ui-bucket'
+          - !Select 
+            - 0
+            - !Split 
+              - '-'
+              - !Select 
+                - 2
+                - !Split 
+                  - /
+                  - !Ref AWS::StackId
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html
@@ -992,7 +1005,7 @@ Resources:
           - Sid: AllowPublicReadAccess
             Effect: Allow
             Principal: "*"
-            Resource: !Sub "arn:aws:s3:::cr-ui-web-app-s3-bucket-ben/*"
+            Resource: !Sub "arn:aws:s3:::${WebAppS3Bucket}/*"
             Action:
               - "s3:GetObject"
 
