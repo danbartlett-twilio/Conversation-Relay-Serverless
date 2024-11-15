@@ -21,6 +21,11 @@ chmod 755 build.sh
 ./build.sh 
 sam build
 sam deploy --resolve-s3 --stack-name CR-MULTI-USE-CASE --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM
+
+aws dynamodb put-item --table-name CR-MULTI-USE-CASE-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/restaurantOrderingUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
+aws dynamodb put-item --table-name CR-MULTI-USE-CASE-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/apartmentSearchUseCase.js | cat)" --profile $(cat ../../aws-profile.profile)
+aws dynamodb put-item --table-name CR-MULTI-USE-CASE-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/apartmentData.js | cat)" --profile $(cat ../../aws-profile.profile)
+aws dynamodb put-item --table-name CR-MULTI-USE-CASE-ConversationRelayAppDatabase --item "$(node ./configuration/dynamo-loaders/profile-example.js | cat)" --profile $(cat ../../aws-profile.profile)
 ```
 
 ## 3. Deploy Visibility React App
