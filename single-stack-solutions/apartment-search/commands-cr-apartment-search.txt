@@ -1,3 +1,8 @@
+commands-cr-apartment-search.txt
+
+This file contains the sequential commands/instrucions 
+needed to deploy this application via AWS CloudFormation (SAM). 
+
 ====================================================
 BEFORE FIRST DEPLOY
 ====================================================
@@ -6,7 +11,7 @@ npm --prefix ./layers/layer-cr-open-ai-client/nodejs install
 npm --prefix ./layers/layer-cr-open-sendgrid-email-client/nodejs install
 npm --prefix ./layers/layer-cr-twilio-client/nodejs install
 
-2) => Save Secrets to AWS SecretsManager
+2) => Save Secrets to AWS SecretsManager (or put crendentials in yaml -- not secure!)
 
 Use AWS Secrets Manager and create a secret for this stack. The secret MUST BE NAMED CR_APT_SEARCH and have the following SecretStrings:
 
@@ -23,10 +28,11 @@ DEPLOY TEMPLATE
 ====================================================
 Run `sam build` from this directory every time before deploying.
 
-Run 
-sam deploy --stack-name CR-APT-SEARCH --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM
+Run For First time
+`sam deploy --guided --stack-name CR-APT-SEARCH --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM`
 
-* The first time you deploy, add `--guided` (`sam deploy --guided --stack-name...`) to the above command to generate a configuration file. All subsequent commands do not need the --guided.
+Run For Subsequent Deployments after making code changes
+`sam deploy --stack-name CR-APT-SEARCH --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM`
 
 ====================================================
 LINK AWS REST API ENDPOINT TO TWILIO
