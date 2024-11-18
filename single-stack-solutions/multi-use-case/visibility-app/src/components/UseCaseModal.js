@@ -47,7 +47,6 @@ export function UseCaseModal(props) {
   const handleTranscriptionUpdate = props.handleTranscriptionUpdate;
 
   const handleUpdate = async (e) => {
-    // e.preventDefault();
     handleToast(
       "Your updates are currently being deployed.",
       "neutral",
@@ -56,8 +55,6 @@ export function UseCaseModal(props) {
     );
 
     let data = config[template];
-    console.log(data);
-
     const updateURL = process.env.REACT_APP_UPDATE_USE_CASE_URL;
 
     try {

@@ -1,4 +1,0 @@
-====================================================
-DEPLOY TEMPLATE
-====================================================
-sam deploy --stack-name USE-CASE-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM 
