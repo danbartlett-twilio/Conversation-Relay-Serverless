@@ -62,6 +62,11 @@ const writeOutPuts = () => {
   )
     .toString()
     .replace(/(\r\n|\n|\r)/gm, "");
+  const REACT_APP_UI_WEB_SOCKET_URL = getCloudFormationOuputValue(
+    "UIWebsocketURL"
+  )
+    .toString()
+    .replace(/(\r\n|\n|\r)/gm, "");
 
   // Clear .env Path first
   clearEnvFile(envPath);
@@ -90,6 +95,11 @@ const writeOutPuts = () => {
   writeEnvVariableToFile(
     "REACT_APP_REFRESH_APARTMENTS_URL",
     REACT_APP_REFRESH_APARTMENTS_URL,
+    envPath
+  );
+  writeEnvVariableToFile(
+    "REACT_APP_UI_WEB_SOCKET_URL",
+    REACT_APP_UI_WEB_SOCKET_URL,
     envPath
   );
 };

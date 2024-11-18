@@ -26,9 +26,7 @@ const Visualizer = forwardRef((props, ref) => {
   }));
 
   const setupWebsockToController = () => {
-    const socket = new WebSocket(
-      " wss://8bs3g9ns29.execute-api.us-east-1.amazonaws.com/prod"
-    );
+    const socket = new WebSocket(process.env.REACT_APP_UI_WEB_SOCKET_URL);
     setWs(socket);
 
     socket.onopen = function (event) {
