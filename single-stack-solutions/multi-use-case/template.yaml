@@ -788,7 +788,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref PrimaryDynamoDBTable
       Events:
-        GetUseCasesEvent:
+        UpdateUseCasesEvent:
           Type: HttpApi
           Properties:
             Path: /update-use-cases
