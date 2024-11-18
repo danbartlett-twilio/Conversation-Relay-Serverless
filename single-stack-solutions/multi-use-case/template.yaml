@@ -792,7 +792,7 @@ Resources:
           Type: HttpApi
           Properties:
             Path: /update-use-cases
-            Method: ANY
+            Method: post
             ApiId: !Ref UpdateUseCasesAPI
 
   GetCallsAPI:
