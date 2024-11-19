@@ -162,12 +162,10 @@ const UseCasePicker = (props) => {
     if (activeCall) {
       return;
     } else {
-      // if (!websocketId) {
       // we also need to check if websocket connection exists or we can set websocket id to null
       if (visualizerRef.current && !websocketId) {
         console.log("Initializing websocket connection");
         visualizerRef.current.invokeSetupWebsockToController();
-        // }
       } else {
         if (!device) {
           handleToast(
@@ -202,6 +200,7 @@ const UseCasePicker = (props) => {
       // Disconnect call
       activeCall.disconnect();
       // Close websocket connection
+      websocketId = null;
       if (visualizerRef.current) {
         visualizerRef.current.invokeCloseWebsockToController();
       }
