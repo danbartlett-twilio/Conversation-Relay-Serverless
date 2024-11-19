@@ -134,6 +134,7 @@ export function UseCaseModal(props) {
                 >
                   <Option value="en-US">en-US</Option>
                   <Option value="en-GB">en-GB</Option>
+                  <Option value="de-DE">de-DE</Option>
                   <Option value="fr-FR">fr-FR</Option>
                   <Option value="es-US">es-US</Option>
                   <Option value="ja-JP">ja-JP</Option>
