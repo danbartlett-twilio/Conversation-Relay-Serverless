@@ -26,7 +26,7 @@ async function sendMessage(data, ws_client, connId) {
     );
     await replyToWS(ws_client, connId, data);
   } catch (e) {
-    console.log("issue sending message: ", e);
+    console.log("error sending message: ", e);
   }
 }
 
@@ -62,8 +62,6 @@ export const lambdaHandler = async (event, context) => {
     })
   );
 
-  console.log("call connection", callConnection);
-
   const ws_client = new ApiGatewayManagementApiClient({
     endpoint: `https://${ws_domain_name}/${ws_stage}`,
   });
@@ -75,9 +73,6 @@ export const lambdaHandler = async (event, context) => {
       uiConnId: body.customParameters.uiConnId,
     };
 
-    console.log(
-      "put new websocket conn and CR conn Item: " + JSON.stringify(putItem)
-    );
     await ddbDocClient.send(
       new PutCommand({
         TableName: process.env.TABLE_NAME,
@@ -96,11 +91,8 @@ export const lambdaHandler = async (event, context) => {
     })
   );
 
-  console.log("ui connection is", uiConnection);
-
+  // If call is from PSTN and not from test client then do not sendMessage
   if (uiConnection.Item?.uiConnId !== "undefined") {
-    // if no uiConnection Id then undefined
-    // means PSTN call shoud continue to work as expected
     ui_ws_client = new ApiGatewayManagementApiClient({
       endpoint: `https://${ui_ws_domain_name}/${ui_ws_stage}`,
     });
@@ -111,13 +103,12 @@ export const lambdaHandler = async (event, context) => {
     // Text prompts and dtmf events sent via WebSockets
     // and tool call completion events follow the same steps and call the LLM
     if (body?.type === "prompt" || body?.type === "dtmf") {
-      // adding ui_client
       const llmResult = await prepareAndCallLLM({
         ddbDocClient: ddbDocClient,
         connectionId: connectionId,
         callConnection: callConnection,
         ui_ws_client: ui_ws_client,
-        uiConnection: uiConnection, //undefined if PSTN call
+        uiConnection: uiConnection,
         ws_client: ws_client,
         ws_domain_name: ws_domain_name,
         ws_stage: ws_stage,

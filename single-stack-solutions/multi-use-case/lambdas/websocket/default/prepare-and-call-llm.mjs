@@ -16,20 +16,9 @@ export async function prepareAndCallLLM(prepareObj) {
   // and string with timestamp for simple query that
   // returns chronologically sorted results.
   // This is the chat history between system, assistant, tools, user
-  console.log("prepare-and-call-llm prepareObj", prepareObj);
-
   let connectionId;
-  // Check if client call or PSTN call
   connectionId = prepareObj.callConnection.Item.cid;
-  // if (prepareObj.callConnection.Item.From === "client:test:conversationRelay") {
-  //   connectionId = prepareObj.callConnection.Item.cid;
-  // } else {
-  //   connectionId = prepareObj.connectionId;
-  // }
-
   const messages = await returnAllChats(prepareObj.ddbDocClient, connectionId);
-
-  console.log("prepare-and-call-llm messages:", messages);
 
   // Set the tool choice to auto which lets the LLM decide
   // whether or not to call a tool. This can be changed if

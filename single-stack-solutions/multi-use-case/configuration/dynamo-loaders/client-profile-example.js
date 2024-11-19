@@ -11,6 +11,9 @@ let userProfile = {
   lastName: {
     S: "lastName", // replace with your name
   },
+  email: {
+    S: "name@example.com", // replace with your email
+  },
   messagingServiceSid: {
     S: "MGXXXXXXXXXXX", //replace with either a twilio phone number in e.164 formart or a twilio messaging service sid - this is in order to receive SMS confirmation from client
   },

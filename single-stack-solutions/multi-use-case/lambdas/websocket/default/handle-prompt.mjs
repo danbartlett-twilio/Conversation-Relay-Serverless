@@ -14,8 +14,6 @@ import { replyToWS } from "./reply-to-ws.mjs";
 export async function handlePrompt(promptObj) {
   let model = process.env.LLM_MODEL ? process.env.LLM_MODEL : "gpt-4o-mini"; // "gpt-4-turbo";
 
-  console.log("handle-prompt promptObj:", promptObj);
-
   // SET THE PROMPT TO OPENAI
   const prompt = {
     messages: promptObj.messages,
@@ -45,7 +43,6 @@ export async function handlePrompt(promptObj) {
   // Client is instantiated in parent lambda.
   const ws_client = promptObj.ws_client;
 
-  // Will be undefined is PSTN call
   const ui_ws_client = promptObj?.ui_ws_client;
   const uiConnection = promptObj?.uiConnection;
 
@@ -155,17 +152,16 @@ export async function handlePrompt(promptObj) {
     "In Handle Prompt about to return...\n" + JSON.stringify(returnObj, null, 2)
   );
 
-  // Return Tool Call to UI Client
+  // Return Tool Call to UI Client if UI Client exists
   if (
     returnObj.finish_reason === "tool_calls" &&
-    returnObj.tool_calls[currentToolCallId].function?.name
+    returnObj.tool_calls[currentToolCallId].function?.name &&
+    uiConnection?.Item?.uiConnId !== "undefined"
   ) {
-    if (uiConnection?.Item?.uiConnId !== "undefined") {
-      await replyToWS(ui_ws_client, uiConnection.Item.uiConnId, {
-        type: "functionCall",
-        token: `Detected new tool call: ${returnObj.tool_calls[currentToolCallId].function?.name} with arguments: ${returnObj.tool_calls[currentToolCallId].function?.arguments}`,
-      });
-    }
+    await replyToWS(ui_ws_client, uiConnection.Item.uiConnId, {
+      type: "functionCall",
+      token: `Detected new tool call: ${returnObj.tool_calls[currentToolCallId].function?.name} with arguments: ${returnObj.tool_calls[currentToolCallId].function?.arguments}`,
+    });
   }
 
   return returnObj;

@@ -18,8 +18,6 @@ import {
   DynamoDBDocumentClient,
   QueryCommand,
   BatchWriteCommand,
-  GetCommand,
-  PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 const dynClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 const ddbDocClient = DynamoDBDocumentClient.from(dynClient);
@@ -60,7 +58,6 @@ export const lambdaHandler = async (event, context) => {
               ...obj,
               cid: event.queryStringParameters.cid,
               pk: event.requestContext.connectionId,
-              // pk1: "connection",
               sk1: obj.From,
               sk: "finalConnection",
               pk1: "finalConnection",
@@ -70,7 +67,7 @@ export const lambdaHandler = async (event, context) => {
         };
       });
 
-      // Persits items to the database
+      // Persists items to the database
       await ddbDocClient.send(
         new BatchWriteCommand({
           RequestItems: { [process.env.TABLE_NAME]: putRequests },
