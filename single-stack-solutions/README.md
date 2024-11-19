@@ -41,8 +41,8 @@ Update your TwiML App with the new Voice URL replacing the SID with your TwiML A
 
 ```bash
 twilio api:core:applications:update \
-   --sid AP2a0747eba6abf96b7e3c3ff0b4530f6e \
-   --voice-url https://f007d7xl7d.execute-api.us-east-1.amazonaws.com/call-setup-restaurant-ordering
+   --sid APXXXXXXXXXXXXX \
+   --voice-url https://{XXXXXXX}.execute-api.us-east-1.amazonaws.com/call-setup-restaurant-ordering
 ```
 
 ## 3. Deploy Visibility React App
