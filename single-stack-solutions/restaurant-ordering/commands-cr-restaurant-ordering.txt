@@ -8,7 +8,7 @@ BEFORE FIRST DEPLOY
 ====================================================
 1) => Install node libraries
 npm --prefix ./layers/layer-cr-open-ai-client/nodejs install
-npm --prefix ./layers/layer-cr-open-sendgrid-email-client/nodejs install
+npm --prefix ./layers/layer-cr-sendgrid-email-client/nodejs install
 npm --prefix ./layers/layer-cr-twilio-client/nodejs install
 
 2) => Save Secrets to AWS SecretsManager (or put crendentials in yaml -- not secure!)
@@ -29,10 +29,10 @@ DEPLOY TEMPLATE
 Run `sam build` from this directory every time before deploying.
 
 Run For First time
-`sam deploy --guided --stack-name USE-CASE-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM`
+`sam deploy --guided --stack-name CR-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM`
 
 Run For Subsequent Deployments after making code changes
-`sam deploy --stack-name USE-CASE-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM`
+`sam deploy --stack-name CR-RESTAURANT-ORDERING --template template.yaml --profile $(cat ../../aws-profile.profile) --capabilities CAPABILITY_NAMED_IAM`
 
 ====================================================
 LINK AWS REST API ENDPOINT TO TWILIO

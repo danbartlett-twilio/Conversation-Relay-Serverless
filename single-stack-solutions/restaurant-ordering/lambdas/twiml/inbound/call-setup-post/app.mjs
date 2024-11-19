@@ -36,6 +36,9 @@ export const lambdaHandler = async (event, context) => {
     let userContext = "";
     if (user.Item) {
         userContext = user.Item;
+    } else {
+        // Set the caller phone number as the userContext pk.
+        userContext = { pk:twilio_body.From };
     }
 
     console.info("user.Item ==>\n" + JSON.stringify(user.Item, null, 2));    
@@ -58,7 +61,7 @@ export const lambdaHandler = async (event, context) => {
         }
         prompt = prompt.replace('<<USER_CONTEXT>>', rString);
     } else {
-        prompt = prompt.replace('<<USER_CONTEXT>>', `First ask for the user's first and last name to use during the call.`);
+        prompt = prompt.replace('<<USER_CONTEXT>>', `First ask for the user's first name and then continue.`);
     }    
 
     console.info("useCase.Item ==>\n" + JSON.stringify(useCase?.Item, null, 2));    

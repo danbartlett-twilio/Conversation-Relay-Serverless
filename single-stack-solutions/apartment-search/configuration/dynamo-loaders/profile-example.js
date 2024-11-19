@@ -11,25 +11,25 @@
 let userProfile = 
 {
   "pk": {
-    "S": "+19494337060"
+    "S": "+15555555555"
   },
   "sk": {
     "S": "profile"
   },
   "email": {
-    "S": "dan@danbartlett.com"
+    "S": "email@twilio.com"
   },
   "firstName": {
     "S": "Dan"
   },
   "lastName": {
-    "S": "Bartlett"
+    "S": "Twilio"
   },
   "pk1": {
     "S": "profile"
   },
   "sk1": {
-    "S": "+19494337060"
+    "S": "+15555555555"
   },
   "useCase": {
     "S": "apartmentSearchUseCase"

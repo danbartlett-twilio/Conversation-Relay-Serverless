@@ -27,6 +27,9 @@ let useCase =
       "ttsProvider": {
         "S": "amazon"
       },
+      "transcriptionProvider": {
+        "S": "deepgram"
+      },      
       "voice": {
         "S": "Matthew-Generative"
       },

@@ -8,7 +8,7 @@ BEFORE FIRST DEPLOY
 ====================================================
 1) => Install node libraries
 npm --prefix ./layers/layer-cr-open-ai-client/nodejs install
-npm --prefix ./layers/layer-cr-open-sendgrid-email-client/nodejs install
+npm --prefix ./layers/layer-cr-sendgrid-email-client/nodejs install
 npm --prefix ./layers/layer-cr-twilio-client/nodejs install
 
 2) => Save Secrets to AWS SecretsManager (or put crendentials in yaml -- not secure!)
