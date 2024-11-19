@@ -140,7 +140,7 @@ const UseCasePicker = (props) => {
 
     call.on("transportClose", function (conn) {
       console.log("Call transportClose.\n");
-      activeCall = undefined;
+      // activeCall = undefined;
     });
 
     call.on("error", function (error) {
