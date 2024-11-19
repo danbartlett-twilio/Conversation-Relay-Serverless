@@ -237,16 +237,16 @@ export function UseCaseModal(props) {
                   }}
                 >
                   {/* Options are dependent on transcriptionProvider  */}
-                  {/* {console.log(transcriptionProvider)} */}
-                  {/* {transcriptionProvider.map((option, index) => (
+                  {transcriptionProvider.map((option, index) => (
                     <Option key={index} value={option}>
                       {option}
                     </Option>
-                  ))} */}
+                  ))}
+                  {/*
                   <Option value="telephony">google: telephony</Option>
                   <Option value="nova-2-general">
                     deepgram: nova-2-general
-                  </Option>
+                  </Option> */}
                 </Select>
               </FormControl>
               <FormControl>
