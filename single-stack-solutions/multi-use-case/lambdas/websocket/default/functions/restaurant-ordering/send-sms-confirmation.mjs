@@ -6,12 +6,20 @@
  * SMS message.
  */
 
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
 import { saveToolResult } from "/opt/save-tool-result.mjs";
+
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  BatchWriteCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
+const dynClient = new DynamoDBClient({ region: process.env.AWS_REGION });
+const ddbDocClient = DynamoDBDocumentClient.from(dynClient);
 
 async function sendMessage(ddbDocClient, tool) {
   // GET the completed order
@@ -49,10 +57,24 @@ async function sendMessage(ddbDocClient, tool) {
       ` This order will be delivered to ${current_order.order.delivery_address}.`;
   }
 
+  // If client call, search for user item in db
   if (tool.call_details.to_phone === "test:conversationRelay") {
-    // hardcoded for now will need to update
-    tool.call_details.from_phone = "+16477782422"; //could get this from setting a profile (or asking for userContext on call)
-    tool.call_details.to_phone = "MG5ff0ab23aab3e700ebc617fb4a9de87d"; //"+12492027920";
+    const user = await ddbDocClient.send(
+      new GetCommand({
+        TableName: process.env.TABLE_NAME,
+        Key: { pk: "client:test:conversationRelay", sk: "profile" },
+      })
+    );
+    // Re-write from & to number to send SMS
+    if (user) {
+      tool.call_details.from_phone = user.Item.personal_phone;
+      tool.call_details.to_phone = user.Item.messagingServiceSid; // this can be a messagingServiceSid or twilio phone number
+    } else {
+      return {
+        status: "error",
+        message: "Sorry, there was an issue sending your SMS confirmation",
+      };
+    }
   }
 
   let snsPayload = {

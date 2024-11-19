@@ -1,39 +1,38 @@
 /**
  * apartmentSearchUseCase.js
- * 
+ *
  * This is a DynamoDB JSON file used to load data into the DynamoDB instance.
- * 
+ *
  * The command to load this item is in the "command-..." file in
  * the parent directory of this stack.
- * 
+ *
  */
 
-let userProfile = 
-{
-  "pk": {
-    "S": "+17048193222"
+let userProfile = {
+  pk: {
+    S: "+1XXXXXXXXXX", // replace with your personal number
   },
-  "sk": {
-    "S": "profile"
+  sk: {
+    S: "profile",
   },
-  "email": {
-    "S": "mvickstrom@twilio.com"
+  email: {
+    S: "name@example.com", // replace with your email
   },
-  "firstName": {
-    "S": "Mark"
+  firstName: {
+    S: "firstName", // replace with your name
   },
-  "lastName": {
-    "S": "Vickstrom"
+  lastName: {
+    S: "lastName", // replace with your name
   },
-  "pk1": {
-    "S": "profile"
+  pk1: {
+    S: "profile",
   },
-  "sk1": {
-    "S": "+17048193222"
+  sk1: {
+    S: "+1XXXXXXXXXX", // replace with your personal number
   },
-  "useCase": {
-    "S": "apartmentSearchUseCase"
-  }
+  useCase: {
+    S: "apartmentSearchUseCase",
+  },
 };
 
 console.log(JSON.stringify(userProfile));

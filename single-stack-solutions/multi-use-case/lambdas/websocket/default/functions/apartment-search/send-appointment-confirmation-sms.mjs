@@ -11,6 +11,16 @@ const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
 import { saveToolResult } from "/opt/save-tool-result.mjs";
 
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  BatchWriteCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
+const dynClient = new DynamoDBClient({ region: process.env.AWS_REGION });
+const ddbDocClient = DynamoDBDocumentClient.from(dynClient);
+
 async function sendMessage(tool) {
   const args = JSON.parse(tool.function.arguments);
 
@@ -23,16 +33,29 @@ async function sendMessage(tool) {
       : "a self-guided";
   const message = `Hi ${name}, your tour for a ${apartmentType} apartment at Parkview is confirmed for ${args.appointmentDetails.date} at ${args.appointmentDetails.time}. This will be ${tourType} tour. We'll be ready for your visit! Let us know if you have any questions.`;
 
-  // Check if client call
+  // If client call, search for user Item in db
   if (tool.call_details.to_phone === "test:conversationRelay") {
-    // hardcoded for now will need to update
-    tool.call_details.from_phone = "+16477782422"; //could get this from setting a profile (or asking for userContext on call)
-    tool.call_details.to_phone = "MG5ff0ab23aab3e700ebc617fb4a9de87d"; //"+12492027920";
+    const user = await ddbDocClient.send(
+      new GetCommand({
+        TableName: process.env.TABLE_NAME,
+        Key: { pk: "client:test:conversationRelay", sk: "profile" },
+      })
+    );
+    // Re-write from & to number
+    if (user) {
+      tool.call_details.from_phone = user.Item.personal_phone;
+      tool.call_details.to_phone = user.Item.messagingServiceSid; // this can be a messagingServiceSid or twilio phone number
+    } else {
+      return {
+        status: "error",
+        message: "Sorry, there was an issue sending your SMS confirmation",
+      };
+    }
   }
 
   let snsPayload = {
     MessageBody: message,
-    From: tool.call_details.to_phone, // The "to" is the Twilio number (sender) //update to userContext.number
+    From: tool.call_details.to_phone, // The "to" is the Twilio number (sender)
     To: tool.call_details.from_phone, // The "from" is the user's phone number (recipient)
   };
 
