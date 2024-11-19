@@ -20,18 +20,14 @@ export async function prepareAndCallLLM(prepareObj) {
 
   let connectionId;
   // Check if client call or PSTN call
-  if (prepareObj.callConnection.Item.From === "client:test:conversationRelay") {
-    connectionId = prepareObj.callConnection.Item.cid;
-  } else {
-    connectionId = prepareObj.connectionId;
-  }
+  connectionId = prepareObj.callConnection.Item.cid;
+  // if (prepareObj.callConnection.Item.From === "client:test:conversationRelay") {
+  //   connectionId = prepareObj.callConnection.Item.cid;
+  // } else {
+  //   connectionId = prepareObj.connectionId;
+  // }
 
-  const messages = await returnAllChats(
-    prepareObj.ddbDocClient,
-    // prepareObj.connectionId,
-    // prepareObj.callConnection.Item.cid
-    connectionId
-  );
+  const messages = await returnAllChats(prepareObj.ddbDocClient, connectionId);
 
   console.log("prepare-and-call-llm messages:", messages);
 
@@ -53,13 +49,7 @@ export async function prepareAndCallLLM(prepareObj) {
     };
 
     // Persist the current prompt so it is included in subsequent calls.
-    await savePrompt(
-      prepareObj.ddbDocClient,
-      // prepareObj.connectionId,
-      // prepareObj.callConnection.Item.cid,
-      connectionId,
-      newUserChatMessage
-    );
+    await savePrompt(prepareObj.ddbDocClient, connectionId, newUserChatMessage);
 
     // Add message to context before calling LLM in this current event.
     messages.push(newUserChatMessage);
@@ -129,8 +119,6 @@ export async function prepareAndCallLLM(prepareObj) {
       // Persist the current prompt so it is included in subsequent calls.
       await savePrompt(
         prepareObj.ddbDocClient,
-        // prepareObj.callConnection.Item.cid,
-        // prepareObj.connectionId,
         connectionId,
         prepareObj.newUserDTMFMessage
       );

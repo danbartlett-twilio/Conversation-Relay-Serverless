@@ -17,13 +17,17 @@ const ddbDocClient = DynamoDBDocumentClient.from(client);
 import { replyToWS } from "./reply-to-ws.mjs";
 
 async function sendMessage(data, ws_client, connId) {
-  console.log(
-    "sending message: " +
-      JSON.stringify(data) +
-      "\nto ui websocket with connId: " +
-      connId
-  );
-  await replyToWS(ws_client, connId, data);
+  try {
+    console.log(
+      "sending message: " +
+        JSON.stringify(data) +
+        "\nto ui websocket with connId: " +
+        connId
+    );
+    await replyToWS(ws_client, connId, data);
+  } catch (e) {
+    console.log("issue sending message: ", e);
+  }
 }
 
 import { ApiGatewayManagementApiClient } from "@aws-sdk/client-apigatewaymanagementapi";
@@ -94,18 +98,13 @@ export const lambdaHandler = async (event, context) => {
 
   console.log("ui connection is", uiConnection);
 
-  if (uiConnection) {
+  if (uiConnection.Item?.uiConnId !== "undefined") {
     // if no uiConnection Id then undefined
+    // means PSTN call shoud continue to work as expected
     ui_ws_client = new ApiGatewayManagementApiClient({
       endpoint: `https://${ui_ws_domain_name}/${ui_ws_stage}`,
     });
-    if (uiConnection.Item?.uiConnId) {
-      sendMessage(body, ui_ws_client, uiConnection.Item?.uiConnId);
-    } else {
-      console.log(
-        "uiConnId is undefined, cannot sendMessage to uiwebsocket client"
-      );
-    }
+    sendMessage(body, ui_ws_client, uiConnection.Item?.uiConnId);
   }
 
   try {
@@ -117,7 +116,7 @@ export const lambdaHandler = async (event, context) => {
         ddbDocClient: ddbDocClient,
         connectionId: connectionId,
         callConnection: callConnection,
-        ui_ws_client: ui_ws_client, //undefined if PSTN call
+        ui_ws_client: ui_ws_client,
         uiConnection: uiConnection, //undefined if PSTN call
         ws_client: ws_client,
         ws_domain_name: ws_domain_name,
@@ -143,25 +142,10 @@ export const lambdaHandler = async (event, context) => {
         newAssistantChatMessage.tool_calls = Object.values(
           llmResult.tool_calls
         );
-
-        // we need to add tool message after calling tool call result
-        // toolAssistantChatMessage.name = Object.values(
-        //   llmResult.tool_calls
-        // )[0].id;
-
-        // toolAssistantChatMessage.tool_call_id = Object.values(
-        //   llmResult.tool_calls
-        // )[0].function.name;
-
-        // console.info(
-        //   "toolAssistantChatMessage before saving to dynamo\n" +
-        //     JSON.stringify(toolAssistantChatMessage, null, 2)
-        // );
       }
 
       await savePrompt(
         ddbDocClient,
-        // connectionId,
         callConnection.Item.cid,
         newAssistantChatMessage
       );
@@ -173,7 +157,6 @@ export const lambdaHandler = async (event, context) => {
         let toolCallResult = await makeFunctionCalls(
           ddbDocClient,
           llmResult.tool_calls,
-          // connectionId,
           callConnection.Item.cid,
           callConnection,
           ws_domain_name,
@@ -191,7 +174,7 @@ export const lambdaHandler = async (event, context) => {
             connectionId: connectionId,
             callConnection: callConnection,
             ui_ws_client: ui_ws_client,
-            uiConnection: uiConnection,
+            uiConnection: uiConnection, //undefined for PSTN
             ws_client: ws_client,
             ws_domain_name: ws_domain_name,
             ws_stage: ws_stage,

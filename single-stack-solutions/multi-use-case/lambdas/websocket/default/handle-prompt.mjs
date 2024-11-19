@@ -126,7 +126,7 @@ export async function handlePrompt(promptObj) {
       });
 
       // Return LLM Responses to UI here if UI connection exists
-      if (ui_ws_client && uiConnection?.Item?.uiConnId) {
+      if (uiConnection?.Item?.uiConnId !== "undefined") {
         await replyToWS(ui_ws_client, uiConnection.Item.uiConnId, {
           type: "text",
           token: chunk.choices[0]?.delta?.content,
@@ -160,7 +160,7 @@ export async function handlePrompt(promptObj) {
     returnObj.finish_reason === "tool_calls" &&
     returnObj.tool_calls[currentToolCallId].function?.name
   ) {
-    if (ui_ws_client && uiConnection?.Item?.uiConnId) {
+    if (uiConnection?.Item?.uiConnId !== "undefined") {
       await replyToWS(ui_ws_client, uiConnection.Item.uiConnId, {
         type: "functionCall",
         token: `Detected new tool call: ${returnObj.tool_calls[currentToolCallId].function?.name} with arguments: ${returnObj.tool_calls[currentToolCallId].function?.arguments}`,
