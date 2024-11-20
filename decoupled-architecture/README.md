@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 # Conversation Relay Serverless
 
 Building production-quality voice AI agents is hard. In addition to building the agent logic, the key expectation when interacting with a voice AI agent is that it feels human-like. Conversation pacing, interruption handling, tone, and striking the right balance between listening/speaking are critical user experience elements that are difficult, but essential, to get right. Above all else, latency is the core problem to solve. 
