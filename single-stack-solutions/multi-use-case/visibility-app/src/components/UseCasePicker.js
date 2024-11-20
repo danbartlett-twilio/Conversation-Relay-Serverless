@@ -20,7 +20,6 @@ import { CallFailedIcon } from "@twilio-paste/icons/esm/CallFailedIcon";
 
 import UseCaseModal from "./UseCaseModal";
 import Visualizer from "./Visualizer";
-// import setupCallEventHandlers from "../util/setupCallEventHandlers";
 import audiovisualizer from "../templates/audiovisualizer";
 import { initialConfiguration } from "../templates/initialConfiguration";
 
@@ -41,28 +40,6 @@ const UseCasePicker = (props) => {
   const device = props.device;
   const loading = props.loading;
 
-  const [voice, setVoice] = useState([]);
-  const voiceOptions = {
-    google: [
-      "en-US-Journey-D",
-      "en-US-Journey-O",
-      "en-GB-Journey-D",
-      "en-GB-Journey-F",
-      "de-DE-Journey-D",
-      "de-DE-Journey-F",
-      "fr-FR-Neural2-C",
-      "es-ES-Neural2-C",
-      "ja-JP-Neural2-B",
-    ],
-    amazon: ["Amy-Generative", "Matthew-Generative"],
-  };
-
-  const [transcriptionProvider, setTranscriptionProvider] = useState([]);
-  const speechModelOptions = {
-    google: ["telephony"],
-    deepgram: ["nova-2-general"],
-  };
-
   const toaster = useToaster();
 
   const handleToast = (message, variant, dismissAfter, id) => {
@@ -78,21 +55,8 @@ const UseCasePicker = (props) => {
   const handleClose = () => setIsOpen(false);
   const handleConfigure = (e) => {
     setIsOpen(true);
-    setVoice(
-      voiceOptions[config[template].conversationRelayParams.ttsProvider]
-    );
-    setTranscriptionProvider(
-      speechModelOptions[
-        config[template].conversationRelayParams.transcriptionProvider
-      ]
-    );
   };
   const handleConfigUpdate = (updatedConfig) => setConfig(updatedConfig);
-  const handleVoiceUpdate = (updatedVoiceOptions) =>
-    setVoice(updatedVoiceOptions);
-
-  const handleTranscriptionUpdate = (updatedSpeechModelOptions) =>
-    setTranscriptionProvider(updatedSpeechModelOptions);
 
   const updateWebsocketId = (newId) => {
     console.log("updating websocket ID to: " + newId);
@@ -143,7 +107,7 @@ const UseCasePicker = (props) => {
 
     call.on("transportClose", function (conn) {
       console.log("Call transportClose.\n");
-      // activeCall = undefined;
+      activeCall = undefined;
     });
 
     call.on("error", function (error) {
@@ -165,7 +129,7 @@ const UseCasePicker = (props) => {
     if (activeCall) {
       return;
     } else {
-      // we also need to check if websocket connection exists or we can set websocket id to null
+      // We also need to check if websocket connection exists
       if (visualizerRef.current && !websocketId) {
         console.log("Initializing websocket connection");
         visualizerRef.current.invokeSetupWebsockToController();
@@ -228,10 +192,6 @@ const UseCasePicker = (props) => {
     );
     setConfig(initialConfiguration);
     initialConfiguration.forEach((item) => {
-      setVoice(voiceOptions[item.conversationRelayParams.ttsProvider]); //voiceOptions(google or amazon)
-      setTranscriptionProvider(
-        speechModelOptions[item.conversationRelayParams.transcriptionProvider]
-      );
       handleUpdate(item);
     });
     try {
@@ -281,16 +241,10 @@ const UseCasePicker = (props) => {
       <UseCaseModal
         config={config}
         template={template}
-        voice={voice}
-        voiceOptions={voiceOptions}
         isOpen={isOpen}
         handleOpen={handleOpen}
         handleClose={handleClose}
         handleConfigUpdate={handleConfigUpdate}
-        handleVoiceUpdate={handleVoiceUpdate}
-        speechModelOptions={speechModelOptions}
-        transcriptionProvider={transcriptionProvider}
-        handleTranscriptionUpdate={handleTranscriptionUpdate}
       />
       <VisualPickerRadioGroup
         legend="Select Use Case"

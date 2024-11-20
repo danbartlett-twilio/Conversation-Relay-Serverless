@@ -34,17 +34,10 @@ export function UseCaseModal(props) {
     });
   };
 
-  // Define voice options
-  const voiceOptions = props.voiceOptions;
   const config = props.config;
   const template = props.template;
-  const voice = props.voice;
   const isOpen = props.isOpen;
   const handleConfigUpdate = props.handleConfigUpdate;
-  const handleVoiceUpdate = props.handleVoiceUpdate;
-  const speechModelOptions = props.speechModelOptions;
-  const transcriptionProvider = props.transcriptionProvider;
-  const handleTranscriptionUpdate = props.handleTranscriptionUpdate;
 
   const handleUpdate = async (e) => {
     handleToast(
@@ -55,6 +48,7 @@ export function UseCaseModal(props) {
     );
 
     let data = config[template];
+
     const updateURL = process.env.REACT_APP_UPDATE_USE_CASE_URL;
 
     try {
@@ -79,6 +73,59 @@ export function UseCaseModal(props) {
       );
     }
   };
+
+  const speechModelOptions = {
+    google: ["telephony"],
+    deepgram: ["nova-2-general"],
+  };
+
+  let selectedSpeechModelOptions =
+    speechModelOptions[
+      config[template].conversationRelayParams.transcriptionProvider
+    ];
+
+  const voiceOptions = {
+    google: {
+      language: {
+        "en-US": ["en-US-Journey-D", "en-US-Journey-O"],
+        "en-GB": ["en-GB-Journey-D", "en-GB-Journey-F"],
+        "en-IN": ["en-IN-Journey-D", "en-IN-Journey-F"],
+        "en-AU": ["en-AU-Neural2-D", "en-AU-Neural2-A"],
+        "de-DE": ["de-DE-Journey-D", "de-DE-Journey-F"],
+        "fr-CA": ["fr-CA-Journey-D", "fr-CA-Journey-F"],
+        "fr-FR": ["fr-FR-Journey-D", "fr-FR-Journey-F"],
+        "it-IT": ["it-IT-Journey-D", "it-IT-Journey-F"],
+        "es-US": ["es-US-Journey-D", "es-US-Journey-F"],
+        "es-ES": ["es-ES-Neural2-C"],
+        "ja-JP": ["ja-JP-Neural2-B", "ja-JP-Wavenet-D"],
+      },
+    },
+    amazon: {
+      language: {
+        "en-US": [
+          "Amy-Generative",
+          "Matthew-Generative",
+          "Ruth-Generative",
+          "Stephen-Generative",
+        ],
+        "en-GB": ["Amy-Neural", "Brian-Neural"],
+        "en-IN": ["Kajal-Neural"],
+        "en-AU": ["Olivia-Generative", "Olivia-Neural"],
+        "de-DE": ["Vicki-Generative"],
+        "fr-CA": ["Gabrielle-Neural", "Liam-Neural"],
+        "fr-FR": ["Léa-Generative"],
+        "it-IT": ["Bianca-Neural", "Adriano-Neural"],
+        "es-US": ["Lupe-Generative"],
+        "es-ES": ["Lucia-Generative"],
+        "ja-JP": ["Takumi-Neural", "Kazuha-Neural"],
+      },
+    },
+  };
+
+  let selectedVoiceOptions =
+    voiceOptions[config[template].conversationRelayParams.ttsProvider].language[
+      config[template].conversationRelayParams.language
+    ];
 
   return (
     <div>
@@ -129,14 +176,24 @@ export function UseCaseModal(props) {
                     const updatedConfig = [...config];
                     updatedConfig[template].conversationRelayParams.language =
                       e.target.value;
+                    // update voice on language settings change
+                    updatedConfig[template].conversationRelayParams.voice =
+                      voiceOptions[
+                        config[template].conversationRelayParams.ttsProvider
+                      ].language[e.target.value][0];
                     handleConfigUpdate(updatedConfig);
                   }}
                 >
                   <Option value="en-US">en-US</Option>
                   <Option value="en-GB">en-GB</Option>
+                  <Option value="en-IN">en-IN</Option>
+                  <Option value="en-AU">en-AU</Option>
                   <Option value="de-DE">de-DE</Option>
+                  <Option value="fr-CA">fr-CA</Option>
                   <Option value="fr-FR">fr-FR</Option>
+                  <Option value="it-IT">it-IT</Option>
                   <Option value="es-US">es-US</Option>
+                  <Option value="es-ES">es-ES</Option>
                   <Option value="ja-JP">ja-JP</Option>
                 </Select>
               </FormControl>
@@ -152,10 +209,12 @@ export function UseCaseModal(props) {
                     updatedConfig[
                       template
                     ].conversationRelayParams.ttsProvider = e.target.value;
+                    // Update voice state on tts provider change
                     updatedConfig[template].conversationRelayParams.voice =
-                      voiceOptions[e.target.value][0];
+                      voiceOptions[e.target.value].language[
+                        config[template].conversationRelayParams.language
+                      ][0];
                     handleConfigUpdate(updatedConfig);
-                    handleVoiceUpdate(voiceOptions[e.target.value]);
                   }}
                 >
                   <Option value="google">google</Option>
@@ -177,13 +236,15 @@ export function UseCaseModal(props) {
                       handleConfigUpdate(updatedConfig);
                     }}
                   >
-                    {/* {console.log(voice)} */}
-                    {/* Options are dependent on TTS provider & Language need to update */}
-                    {voice.map((option, index) => (
-                      <Option key={index} value={option}>
-                        {option}
-                      </Option>
-                    ))}
+                    {selectedVoiceOptions ? (
+                      selectedVoiceOptions.map((option, index) => (
+                        <Option key={index} value={option}>
+                          {option}
+                        </Option>
+                      ))
+                    ) : (
+                      <Option value="error">No Available Options</Option>
+                    )}
                   </Select>
                 )}
               </FormControl>
@@ -212,9 +273,9 @@ export function UseCaseModal(props) {
                       speechModelOptions[e.target.value][0];
 
                     handleConfigUpdate(updatedConfig);
-                    handleTranscriptionUpdate(
-                      speechModelOptions[e.target.value]
-                    );
+                    // handleTranscriptionUpdate(
+                    //   speechModelOptions[e.target.value]
+                    // );
                   }}
                 >
                   <Option value="google">google</Option>
@@ -238,16 +299,15 @@ export function UseCaseModal(props) {
                   }}
                 >
                   {/* Options are dependent on transcriptionProvider  */}
-                  {transcriptionProvider.map((option, index) => (
-                    <Option key={index} value={option}>
-                      {option}
-                    </Option>
-                  ))}
-                  {/*
-                  <Option value="telephony">google: telephony</Option>
-                  <Option value="nova-2-general">
-                    deepgram: nova-2-general
-                  </Option> */}
+                  {selectedSpeechModelOptions ? (
+                    selectedSpeechModelOptions.map((option, index) => (
+                      <Option key={index} value={option}>
+                        {option}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option value="error">No Available Options</Option>
+                  )}
                 </Select>
               </FormControl>
               <FormControl>
