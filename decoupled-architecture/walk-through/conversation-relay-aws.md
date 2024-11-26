@@ -38,6 +38,16 @@
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 
+## Your Application, your choices.
+
+![Detailed Architecture](https://github.com/user-attachments/assets/b89e1161-9ce4-4ae0-a214-7f188207a266)
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
 ## Build your AI-backed voice application in your AWS environment.
 
 ![ConversationRelay Reference Application - CR + AWS Bedrock](https://github.com/user-attachments/assets/c292c8af-9835-4e85-92a2-040ce9a2940e)
