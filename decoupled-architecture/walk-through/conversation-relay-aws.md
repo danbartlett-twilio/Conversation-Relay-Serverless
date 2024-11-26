@@ -26,7 +26,7 @@
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 
-## End user text delivered to your AWS application as text events.
+## End user speech delivered to your AWS application as text events.
 
 ![ConversationRelay Reference Application - CR-Speech to Events](https://github.com/user-attachments/assets/f413239b-e074-4251-97d5-a2429a63a9e3)
 
