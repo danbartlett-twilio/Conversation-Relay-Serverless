@@ -27,10 +27,11 @@ export async function PlaceOrderFunction(ddbDocClient, tool) {
   console.log("order_sk ==> ", order_sk);
 
   console.log("pk -> tool.userContext", tool.userContext);
+  let order_pk = (tool.userContext == "")? "unknownUser": tool.userContext.pk;
 
   // Save new appointment linked to the user to the database
   let confirmedOrder = {
-    pk: tool.userContext.pk,
+    pk: order_pk,
     sk: order_sk,
     pk1: "restaurantOrder",
     sk1: tool.userContext.pk,
