@@ -22,7 +22,7 @@ let useCase =
         "BOOL": true
       },
       "interruptible": {
-        "S": "dtmf"
+        "S": "both"
       },
       "ttsProvider": {
         "S": "amazon"

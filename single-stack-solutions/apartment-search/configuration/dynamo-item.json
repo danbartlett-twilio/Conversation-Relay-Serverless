@@ -3,7 +3,7 @@
     "sk": "configuration",
     "conversationRelayParams": {
      "dtmfDetection": true,
-     "interruptible": "dtmf",
+     "interruptible": "both",
      "ttsProvider": "amazon",
      "voice": "Matthew-Generative",
      "welcomeGreeting": "Hello, this is Matt with Parkview Apartments. Press 1 to hear available apartments, 2 for your appointments, or let me know how I can help you today!"

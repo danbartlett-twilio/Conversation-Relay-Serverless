@@ -3,7 +3,7 @@
     "sk": "configuration",
     "conversationRelayParams": {
      "dtmfDetection": true,
-     "interruptible":"dtmf",
+     "interruptible":"both",
      "ttsProvider": "google",
      "voice": "en-US-Journey-O",
      "welcomeGreeting": "Thanks for calling Twilio Dough Boy Pizza! How can I help you?"
