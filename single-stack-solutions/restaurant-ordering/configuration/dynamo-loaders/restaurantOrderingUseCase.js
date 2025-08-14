@@ -21,8 +21,8 @@ let useCase =
       "dtmfDetection": {
         "BOOL": true
       },
-      "interruptByDtmf": {
-        "BOOL": true
+      "interruptible": {
+        "S": "dtmf"
       },
       "ttsProvider": {
         "S": "google"
